@@ -58,7 +58,7 @@ public class MainActivity extends Activity {
         return text;
     }
 
-    private void setImmersive(boolean enabled) {
+    private void applyImmersiveMode(boolean enabled) {
         int flags = View.SYSTEM_UI_FLAG_LAYOUT_STABLE
                 | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
                 | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION;
@@ -72,7 +72,7 @@ public class MainActivity extends Activity {
 
     private void showHome() {
         expanded = false;
-        setImmersive(false);
+        applyImmersiveMode(false);
         if (webView != null) {
             webView.stopLoading();
             webView.destroy();
@@ -198,7 +198,7 @@ public class MainActivity extends Activity {
                 fullScreenContainer.addView(view, new FrameLayout.LayoutParams(
                         ViewGroup.LayoutParams.MATCH_PARENT,
                         ViewGroup.LayoutParams.MATCH_PARENT));
-                setImmersive(true);
+                applyImmersiveMode(true);
                 setContentView(fullScreenContainer);
             }
 
@@ -226,7 +226,7 @@ public class MainActivity extends Activity {
         } else {
             root.addView(playerBar, 0);
         }
-        setImmersive(value);
+        applyImmersiveMode(value);
         webView.requestFocus();
     }
 
@@ -235,7 +235,7 @@ public class MainActivity extends Activity {
         fullScreenContainer.removeView(customView);
         customView = null;
         setContentView(root);
-        setImmersive(expanded);
+        applyImmersiveMode(expanded);
         if (customViewCallback != null) customViewCallback.onCustomViewHidden();
         customViewCallback = null;
         webView.requestFocus();
