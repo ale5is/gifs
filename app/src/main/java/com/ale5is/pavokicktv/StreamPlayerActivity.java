@@ -43,6 +43,7 @@ public class StreamPlayerActivity extends Activity {
     private PlayerView playerView;
     private TextView status;
     private LinearLayout topBar;
+    private View controllerView;
     private SeekBar volumeSlider;
     private PopupWindow volumePopup;
     private View volumeButton;
@@ -118,7 +119,9 @@ public class StreamPlayerActivity extends Activity {
             if(control!=null && control.isFocusable())addFocusHighlight(control);
         }
         playerView.setControllerVisibilityListener(visibility->{
-            if(topBar!=null)topBar.setVisibility(navigationZone==0?View.VISIBLE:View.GONE);
+            if(topBar!=null)topBar.setVisibility(navigationZone==0?View.VISIBLE:View.INVISIBLE);
+            if(controllerView!=null && navigationZone==1)
+                controllerView.setVisibility(View.INVISIBLE);
         });
 
         trackSelector=new DefaultTrackSelector(this);
@@ -130,7 +133,8 @@ public class StreamPlayerActivity extends Activity {
                 .setMediaSourceFactory(new com.google.android.exoplayer2.source.DefaultMediaSourceFactory(dataSourceFactory)).build();
         playerView.setPlayer(player);
         playerView.post(()->{
-            View controller=playerView.findViewById(com.google.android.exoplayer2.ui.R.id.exo_controller);
+            controllerView=playerView.findViewById(com.google.android.exoplayer2.ui.R.id.exo_controller);
+            View controller=controllerView;
             if(controller!=null && controller.getLayoutParams() instanceof FrameLayout.LayoutParams){
                 FrameLayout.LayoutParams controllerParams=(FrameLayout.LayoutParams)controller.getLayoutParams();
                 controllerParams.bottomMargin=dp(18);
@@ -215,17 +219,15 @@ public class StreamPlayerActivity extends Activity {
         }
         controlsHiddenByCenter=true;
         navigationZone=1;
-        if(topBar!=null)topBar.setVisibility(View.GONE);
-        if(playerView!=null)playerView.hideController();
-        View current=getCurrentFocus();
-        if(current!=null)current.clearFocus();
+        if(topBar!=null)topBar.setVisibility(View.INVISIBLE);
+        if(controllerView!=null)controllerView.setVisibility(View.INVISIBLE);
     }
 
     private void showTopZone(){
         controlsHiddenByCenter=false;
         navigationZone=0;
         if(topBar!=null)topBar.setVisibility(View.VISIBLE);
-        if(playerView!=null)playerView.hideController();
+        if(controllerView!=null)controllerView.setVisibility(View.INVISIBLE);
         if(topBar!=null)topBar.post(()->{
             View target=lastTopFocusIndex>=0 && lastTopFocusIndex<topBar.getChildCount()
                     ?topBar.getChildAt(lastTopFocusIndex):null;
@@ -258,7 +260,8 @@ public class StreamPlayerActivity extends Activity {
     private void showBottomZone(){
         controlsHiddenByCenter=false;
         navigationZone=2;
-        if(topBar!=null)topBar.setVisibility(View.GONE);
+        if(topBar!=null)topBar.setVisibility(View.INVISIBLE);
+        if(controllerView!=null)controllerView.setVisibility(View.VISIBLE);
         if(playerView!=null){
             playerView.showController();
             playerView.post(()->{
