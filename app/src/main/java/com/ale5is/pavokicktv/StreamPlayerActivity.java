@@ -183,12 +183,21 @@ public class StreamPlayerActivity extends Activity {
         int[] ids={com.google.android.exoplayer2.ui.R.id.exo_play,com.google.android.exoplayer2.ui.R.id.exo_pause,
                 com.google.android.exoplayer2.ui.R.id.exo_ffwd,com.google.android.exoplayer2.ui.R.id.exo_rew,
                 com.google.android.exoplayer2.ui.R.id.exo_prev,com.google.android.exoplayer2.ui.R.id.exo_next,
-                com.google.android.exoplayer2.ui.R.id.exo_settings};
+                com.google.android.exoplayer2.ui.R.id.exo_settings,com.google.android.exoplayer2.ui.R.id.exo_progress};
         for(int id:ids){View v=playerView.findViewById(id);if(v!=null)addFocusHighlight(v);}
     }
     private Button button(String label){Button b=new Button(this);b.setText(label);b.setTextSize(11);b.setFocusable(true);return b;}
 
     private void hideHud(){
+        View focused=getCurrentFocus();
+        if(focused!=null){
+            if(focused==topBar || isDescendantOf(focused,topBar))lastTopFocus=focused;
+            else if(focused.getId()==com.google.android.exoplayer2.ui.R.id.exo_progress){
+                navigationZone=3;
+            }else if(isDescendantOf(focused,playerView)){
+                lastPlaybackControl=focused;
+            }
+        }
         controlsHiddenByCenter=true;navigationZone=1;
         if(playerView!=null)playerView.hideController();
         if(topBar!=null)topBar.setVisibility(View.GONE);
