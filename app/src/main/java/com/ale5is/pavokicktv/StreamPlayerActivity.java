@@ -126,7 +126,15 @@ public class StreamPlayerActivity extends Activity {
         player=new ExoPlayer.Builder(this).setTrackSelector(trackSelector)
                 .setMediaSourceFactory(new com.google.android.exoplayer2.source.DefaultMediaSourceFactory(dataSourceFactory)).build();
         playerView.setPlayer(player);
-        playerView.post(()->attachPlayerControlHighlights());
+        playerView.post(()->{
+            View controller=playerView.findViewById(com.google.android.exoplayer2.ui.R.id.exo_controller);
+            if(controller!=null && controller.getLayoutParams() instanceof FrameLayout.LayoutParams){
+                FrameLayout.LayoutParams controllerParams=(FrameLayout.LayoutParams)controller.getLayoutParams();
+                controllerParams.bottomMargin=dp(18);
+                controller.setLayoutParams(controllerParams);
+            }
+            attachPlayerControlHighlights();
+        });
         player.addListener(new Player.Listener(){
             @Override public void onPlaybackStateChanged(int state){
                 if(state==Player.STATE_READY)status.setVisibility(View.GONE);
@@ -146,9 +154,15 @@ public class StreamPlayerActivity extends Activity {
         final android.graphics.drawable.Drawable original=view.getBackground();
         view.setOnFocusChangeListener((v,focused)->{
             if(focused){
-                navigationZone=(v.getParent()==topBar || isDescendantOf(v,topBar))?0:2;
-                if(navigationZone==0)lastTopFocus=v;
-                else if(v.getId()!=com.google.android.exoplayer2.ui.R.id.exo_progress)lastPlaybackControl=v;
+                if(v.getParent()==topBar || isDescendantOf(v,topBar)){
+                    navigationZone=0;
+                    lastTopFocus=v;
+                }else if(v.getId()==com.google.android.exoplayer2.ui.R.id.exo_progress){
+                    navigationZone=3;
+                }else{
+                    navigationZone=2;
+                    lastPlaybackControl=v;
+                }
                 controlsHiddenByCenter=false;
                 if(topBar!=null)topBar.setVisibility(navigationZone==0?View.VISIBLE:View.GONE);
                 android.graphics.drawable.GradientDrawable outline=new android.graphics.drawable.GradientDrawable();
@@ -317,15 +331,16 @@ public class StreamPlayerActivity extends Activity {
             if(key==KeyEvent.KEYCODE_VOLUME_UP || key==KeyEvent.KEYCODE_VOLUME_DOWN)
                 return super.dispatchKeyEvent(event);
             if(key==KeyEvent.KEYCODE_DPAD_UP){
-                if(navigationZone==2){
+                if(navigationZone==3){
                     if(lastPlaybackControl!=null && lastPlaybackControl.isFocusable()
                             && lastPlaybackControl.getVisibility()==View.VISIBLE){
                         lastPlaybackControl.requestFocus();
                         return true;
                     }
-                    hideHud();
+                    showBottomZone();
                     return true;
                 }
+                if(navigationZone==2){showTopZone();return true;}
                 if(navigationZone==1){showTopZone();return true;}
             }
             if(key==KeyEvent.KEYCODE_DPAD_DOWN){
