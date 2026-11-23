@@ -9,11 +9,13 @@ import android.os.Bundle;
 import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.PopupMenu;
+import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -40,6 +42,7 @@ public class StreamPlayerActivity extends Activity {
     private PlayerView playerView;
     private TextView status;
     private LinearLayout topBar;
+    private SeekBar volumeSlider;
     private boolean controlsHiddenByCenter;
     private int navigationZone=0;
     private String channel, vodUuid, vodTitle, directMediaUrl;
@@ -73,10 +76,24 @@ public class StreamPlayerActivity extends Activity {
         TextView name=new TextView(this);name.setText("  "+(vodTitle!=null?vodTitle:channel));
         name.setTextColor(Color.WHITE);name.setTextSize(14);
         topBar.addView(name,new LinearLayout.LayoutParams(0,-2,1));
-        Button quality=button("CALIDAD");quality.setOnClickListener(this::showQualityMenu);topBar.addView(quality);
-        Button speed=button("VELOCIDAD");speed.setOnClickListener(this::showSpeedMenu);topBar.addView(speed);
-        Button volDown=button("VOL −");volDown.setOnClickListener(v->changeVolume(false));topBar.addView(volDown);
-        Button volUp=button("VOL +");volUp.setOnClickListener(v->changeVolume(true));topBar.addView(volUp);
+        Button quality=button("⚙");quality.setContentDescription("Calidad de video");quality.setTextSize(22);quality.setOnClickListener(this::showQualityMenu);topBar.addView(quality);
+        Button speed=button("◷");speed.setContentDescription("Velocidad de reproducción");speed.setTextSize(22);speed.setOnClickListener(this::showSpeedMenu);topBar.addView(speed);
+        TextView volumeIcon=new TextView(this);volumeIcon.setText("🔊");volumeIcon.setTextColor(Color.WHITE);volumeIcon.setTextSize(18);volumeIcon.setGravity(Gravity.CENTER);topBar.addView(volumeIcon);
+        volumeSlider=new SeekBar(this);volumeSlider.setMax(100);
+        AudioManager audio=(AudioManager)getSystemService(Context.AUDIO_SERVICE);
+        if(audio!=null){int max=audio.getStreamMaxVolume(AudioManager.STREAM_MUSIC);int current=audio.getStreamVolume(AudioManager.STREAM_MUSIC);volumeSlider.setProgress(max==0?0:(current*100/max));}
+        volumeSlider.setFocusable(true);volumeSlider.setContentDescription("Volumen");
+        volumeSlider.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener(){
+            @Override public void onProgressChanged(SeekBar seekBar,int progress,boolean fromUser){
+                if(fromUser){AudioManager manager=(AudioManager)getSystemService(Context.AUDIO_SERVICE);if(manager!=null){
+                    int max=manager.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
+                    manager.setStreamVolume(AudioManager.STREAM_MUSIC,Math.round(max*progress/100f),0);
+                }}
+            }
+            @Override public void onStartTrackingTouch(SeekBar seekBar){}
+            @Override public void onStopTrackingTouch(SeekBar seekBar){}
+        });
+        topBar.addView(volumeSlider,new LinearLayout.LayoutParams(dp(105),dp(42)));
         FrameLayout.LayoutParams topParams=new FrameLayout.LayoutParams(-1,-2,Gravity.TOP);frame.addView(topBar,topParams);
 
         status=new TextView(this);status.setText("Conectando con KICK...");
@@ -113,6 +130,7 @@ public class StreamPlayerActivity extends Activity {
         player=new ExoPlayer.Builder(this).setTrackSelector(trackSelector)
                 .setMediaSourceFactory(new com.google.android.exoplayer2.source.DefaultMediaSourceFactory(dataSourceFactory)).build();
         playerView.setPlayer(player);
+        playerView.post(()->attachPlayerControlHighlights());
         player.addListener(new Player.Listener(){
             @Override public void onPlaybackStateChanged(int state){
                 if(state==Player.STATE_READY)status.setVisibility(View.GONE);
@@ -127,17 +145,34 @@ public class StreamPlayerActivity extends Activity {
     }
     private int dp(float value){return (int)(value*getResources().getDisplayMetrics().density+0.5f);}
     private void addFocusHighlight(View view){
+        if(view==null || Boolean.TRUE.equals(view.getTag(0x7f0a0001)))return;
+        view.setTag(0x7f0a0001,Boolean.TRUE);
         final android.graphics.drawable.Drawable original=view.getBackground();
         view.setOnFocusChangeListener((v,focused)->{
             if(focused){
-                navigationZone=(v.getParent()==topBar)?0:2;
+                navigationZone=(v.getParent()==topBar || isDescendantOf(v,topBar))?0:2;
                 controlsHiddenByCenter=false;
                 if(topBar!=null)topBar.setVisibility(navigationZone==0?View.VISIBLE:View.GONE);
                 android.graphics.drawable.GradientDrawable outline=new android.graphics.drawable.GradientDrawable();
-                outline.setColor(0x4429B6F6);outline.setCornerRadius(dp(5));
-                outline.setStroke(dp(3),0xFF29B6F6);v.setBackground(outline);
-            }else v.setBackground(original);
+                outline.setColor(0x6633B5E5);outline.setCornerRadius(dp(6));
+                outline.setStroke(dp(4),0xFFFFFFFF);v.setBackground(outline);
+                v.setScaleX(1.08f);v.setScaleY(1.08f);
+            }else{
+                v.setBackground(original);v.setScaleX(1f);v.setScaleY(1f);
+            }
         });
+    }
+    private boolean isDescendantOf(View child,ViewGroup parent){
+        android.view.ViewParent p=child.getParent();
+        while(p!=null){if(p==parent)return true;if(!(p instanceof android.view.View))break;p=((android.view.View)p).getParent();}
+        return false;
+    }
+    private void attachPlayerControlHighlights(){
+        int[] ids={com.google.android.exoplayer2.ui.R.id.exo_play,com.google.android.exoplayer2.ui.R.id.exo_pause,
+                com.google.android.exoplayer2.ui.R.id.exo_ffwd,com.google.android.exoplayer2.ui.R.id.exo_rew,
+                com.google.android.exoplayer2.ui.R.id.exo_prev,com.google.android.exoplayer2.ui.R.id.exo_next,
+                com.google.android.exoplayer2.ui.R.id.exo_settings};
+        for(int id:ids){View v=playerView.findViewById(id);if(v!=null)addFocusHighlight(v);}
     }
     private Button button(String label){Button b=new Button(this);b.setText(label);b.setTextSize(11);b.setFocusable(true);return b;}
 
