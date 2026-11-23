@@ -40,8 +40,8 @@ public class StreamPlayerActivity extends Activity {
     private PlayerView playerView;
     private TextView status;
     private LinearLayout topBar;
-    private View centerFocus;
     private boolean controlsHiddenByCenter;
+    private int navigationZone=0;
     private String channel, vodUuid, vodTitle, directMediaUrl;
 
     @Override protected void onCreate(Bundle state) {
@@ -65,18 +65,7 @@ public class StreamPlayerActivity extends Activity {
         playerView.setShowBuffering(PlayerView.SHOW_BUFFERING_ALWAYS);
         frame.addView(playerView,new FrameLayout.LayoutParams(-1,-1));
 
-        centerFocus=new View(this);
-        centerFocus.setId(View.generateViewId());
-        centerFocus.setFocusable(true);centerFocus.setFocusableInTouchMode(true);
-        centerFocus.setClickable(true);centerFocus.setContentDescription("Zona central: ocultar o mostrar controles");
-        centerFocus.setBackgroundColor(Color.TRANSPARENT);
-        FrameLayout.LayoutParams centerParams=new FrameLayout.LayoutParams(dp(76),dp(76),Gravity.CENTER);
-        frame.addView(centerFocus,centerParams);
-        centerFocus.setOnFocusChangeListener((view,focused)->{
-            if(focused)hideHudFromCenter();
-        });
-        centerFocus.setOnClickListener(v->showHudFromCenter());
-
+ 
         topBar=new LinearLayout(this);topBar.setOrientation(LinearLayout.HORIZONTAL);
         topBar.setGravity(Gravity.CENTER_VERTICAL);topBar.setPadding(8,5,8,5);
         topBar.setBackgroundColor(0x99000000);
@@ -97,7 +86,7 @@ public class StreamPlayerActivity extends Activity {
 
         for(int i=0;i<topBar.getChildCount();i++){
             View child=topBar.getChildAt(i);
-            if(child.isFocusable())child.setNextFocusDownId(centerFocus.getId());
+            if(child.isFocusable())addFocusHighlight(child);
         }
         int[] playbackControlIds = {
                 com.google.android.exoplayer2.ui.R.id.exo_play,
@@ -110,7 +99,7 @@ public class StreamPlayerActivity extends Activity {
         };
         for(int id:playbackControlIds){
             View control=playerView.findViewById(id);
-            if(control!=null && control.isFocusable())control.setNextFocusUpId(centerFocus.getId());
+            if(control!=null && control.isFocusable())addFocusHighlight(control);
         }
         playerView.setControllerVisibilityListener(visibility->{
             if(topBar!=null && !controlsHiddenByCenter)topBar.setVisibility(visibility);
@@ -137,21 +126,37 @@ public class StreamPlayerActivity extends Activity {
         });
     }
     private int dp(float value){return (int)(value*getResources().getDisplayMetrics().density+0.5f);}
+    private void addFocusHighlight(View view){
+        final android.graphics.drawable.Drawable original=view.getBackground();
+        view.setOnFocusChangeListener((v,focused)->{
+            if(focused){
+                android.graphics.drawable.GradientDrawable outline=new android.graphics.drawable.GradientDrawable();
+                outline.setColor(0x3329B6F6);outline.setCornerRadius(dp(5));
+                outline.setStroke(dp(2),0xFF29B6F6);v.setBackground(outline);
+            }else v.setBackground(original);
+        });
+    }
     private Button button(String label){Button b=new Button(this);b.setText(label);b.setTextSize(11);b.setFocusable(true);return b;}
 
-    private void hideHudFromCenter(){
-        controlsHiddenByCenter=true;
+    private void hideHud(){
+        controlsHiddenByCenter=true;navigationZone=1;
         if(playerView!=null)playerView.hideController();
         if(topBar!=null)topBar.setVisibility(View.GONE);
     }
-    private void showHudFromCenter(){
-        controlsHiddenByCenter=false;
+    private void showTopZone(){
+        controlsHiddenByCenter=false;navigationZone=0;
         if(topBar!=null)topBar.setVisibility(View.VISIBLE);
+        if(playerView!=null)playerView.hideController();
+        if(topBar!=null && topBar.getChildCount()>0)topBar.getChildAt(0).requestFocus();
+    }
+    private void showBottomZone(){
+        controlsHiddenByCenter=false;navigationZone=2;
+        if(topBar!=null)topBar.setVisibility(View.GONE);
         if(playerView!=null)playerView.showController();
-        View play=playerView==null?null:playerView.findViewById(com.google.android.exoplayer2.ui.R.id.exo_play);
-        if(play==null && playerView!=null)play=playerView.findViewById(com.google.android.exoplayer2.ui.R.id.exo_pause);
-        if(play!=null)play.requestFocus();
-        else if(topBar!=null && topBar.getChildCount()>0)topBar.getChildAt(0).requestFocus();
+        View target=playerView==null?null:playerView.findViewById(player!=null && player.isPlaying()
+                ?com.google.android.exoplayer2.ui.R.id.exo_pause:com.google.android.exoplayer2.ui.R.id.exo_play);
+        if(target==null && playerView!=null)target=playerView.findViewById(com.google.android.exoplayer2.ui.R.id.exo_play);
+        if(target!=null)target.requestFocus();
     }
 
     private void resolveAndPlay(){
@@ -216,25 +221,21 @@ public class StreamPlayerActivity extends Activity {
     }
     @Override public boolean dispatchKeyEvent(KeyEvent event){
         int key=event.getKeyCode();
-        if(event.getAction()==KeyEvent.ACTION_DOWN && centerFocus!=null && centerFocus.hasFocus()){
-            if(key==KeyEvent.KEYCODE_DPAD_CENTER || key==KeyEvent.KEYCODE_ENTER){
-                showHudFromCenter();return true;
-            }
+        if(event.getAction()==KeyEvent.ACTION_DOWN){
+            if(key==KeyEvent.KEYCODE_VOLUME_UP || key==KeyEvent.KEYCODE_VOLUME_DOWN)
+                return super.dispatchKeyEvent(event);
             if(key==KeyEvent.KEYCODE_DPAD_UP){
-                showHudFromCenter();return true;
+                if(navigationZone==2){hideHud();return true;}
+                if(navigationZone==1){showTopZone();return true;}
             }
-            if(key==KeyEvent.KEYCODE_DPAD_DOWN || key==KeyEvent.KEYCODE_DPAD_LEFT || key==KeyEvent.KEYCODE_DPAD_RIGHT){
-                hideHudFromCenter();return true;
+            if(key==KeyEvent.KEYCODE_DPAD_DOWN){
+                if(navigationZone==0){hideHud();return true;}
+                if(navigationZone==1){showBottomZone();return true;}
             }
-        }
-        if(event.getAction()==KeyEvent.ACTION_DOWN && (key==KeyEvent.KEYCODE_VOLUME_UP || key==KeyEvent.KEYCODE_VOLUME_DOWN))
-            return super.dispatchKeyEvent(event);
-        if(playerView!=null && !playerView.isControllerVisible()){
-            if(key==KeyEvent.KEYCODE_DPAD_CENTER||key==KeyEvent.KEYCODE_ENTER||key==KeyEvent.KEYCODE_DPAD_LEFT
-                    ||key==KeyEvent.KEYCODE_DPAD_RIGHT||key==KeyEvent.KEYCODE_DPAD_UP||key==KeyEvent.KEYCODE_DPAD_DOWN){
-                controlsHiddenByCenter=false;playerView.showController();
-                if(topBar!=null)topBar.setVisibility(View.VISIBLE);return true;
-            }
+            if(navigationZone==1 && (key==KeyEvent.KEYCODE_DPAD_CENTER || key==KeyEvent.KEYCODE_ENTER))
+                return true;
+            if(navigationZone==1 && (key==KeyEvent.KEYCODE_DPAD_LEFT || key==KeyEvent.KEYCODE_DPAD_RIGHT))
+                return true;
         }
         return super.dispatchKeyEvent(event);
     }
