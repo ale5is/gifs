@@ -66,6 +66,7 @@ public class StreamPlayerActivity extends Activity {
         frame.addView(playerView,new FrameLayout.LayoutParams(-1,-1));
 
         centerFocus=new View(this);
+        centerFocus.setId(View.generateViewId());
         centerFocus.setFocusable(true);centerFocus.setFocusableInTouchMode(true);
         centerFocus.setClickable(true);centerFocus.setContentDescription("Zona central: ocultar o mostrar controles");
         centerFocus.setBackgroundColor(Color.TRANSPARENT);
@@ -97,6 +98,19 @@ public class StreamPlayerActivity extends Activity {
         for(int i=0;i<topBar.getChildCount();i++){
             View child=topBar.getChildAt(i);
             if(child.isFocusable())child.setNextFocusDownId(centerFocus.getId());
+        }
+        int[] playbackControlIds = {
+                com.google.android.exoplayer2.ui.R.id.exo_play,
+                com.google.android.exoplayer2.ui.R.id.exo_pause,
+                com.google.android.exoplayer2.ui.R.id.exo_ffwd,
+                com.google.android.exoplayer2.ui.R.id.exo_rew,
+                com.google.android.exoplayer2.ui.R.id.exo_prev,
+                com.google.android.exoplayer2.ui.R.id.exo_next,
+                com.google.android.exoplayer2.ui.R.id.exo_settings
+        };
+        for(int id:playbackControlIds){
+            View control=playerView.findViewById(id);
+            if(control!=null && control.isFocusable())control.setNextFocusUpId(centerFocus.getId());
         }
         playerView.setControllerVisibilityListener(visibility->{
             if(topBar!=null && !controlsHiddenByCenter)topBar.setVisibility(visibility);
