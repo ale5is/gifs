@@ -1,15 +1,15 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <uses-permission android:name="android.permission.INTERNET" />
     <application
+        android:allowBackup="false"
+        android:label="PavoKick TV"
+        android:usesCleartextTraffic="false"
+        android:theme="@android:style/Theme.Material.NoActionBar">
         <activity
             android:name=".ChannelClipsActivity"
             android:configChanges="keyboard|keyboardHidden|orientation|screenSize"
             android:screenOrientation="landscape"
             android:exported="false" />
-        android:allowBackup="false"
-        android:label="PavoKick TV"
-        android:usesCleartextTraffic="false"
-        android:theme="@android:style/Theme.Material.NoActionBar">
         <activity
             android:name=".ChannelHistoryActivity"
             android:configChanges="keyboard|keyboardHidden|orientation|screenSize"
