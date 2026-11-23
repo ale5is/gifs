@@ -80,10 +80,10 @@ public class StreamPlayerActivity extends Activity {
         TextView name=new TextView(this);name.setText("  "+(vodTitle!=null?vodTitle:channel));
         name.setTextColor(Color.WHITE);name.setTextSize(14);
         topBar.addView(name,new LinearLayout.LayoutParams(0,-2,1));
-        Button quality=button("⚙");quality.setContentDescription("Calidad de video");quality.setTextSize(22);quality.setOnClickListener(this::showQualityMenu);topBar.addView(quality);
-        Button speed=button("◷");speed.setContentDescription("Velocidad de reproducción");speed.setTextSize(22);speed.setOnClickListener(this::showSpeedMenu);topBar.addView(speed);
-        Button speaker=button("🔊");
-        speaker.setTextSize(20);
+        Button quality=button("HD");quality.setContentDescription("Calidad de video");quality.setTextSize(12);quality.setOnClickListener(this::showQualityMenu);topBar.addView(quality);
+        Button speed=button("1x");speed.setContentDescription("Velocidad de reproducción");speed.setTextSize(12);speed.setOnClickListener(this::showSpeedMenu);topBar.addView(speed);
+        Button speaker=button("VOL");
+        speaker.setTextSize(12);
         speaker.setContentDescription("Volumen");
         volumeButton=speaker;
         speaker.setOnClickListener(v->toggleVolumeSlider(speaker));
@@ -257,16 +257,16 @@ public class StreamPlayerActivity extends Activity {
         panel.setPadding(dp(12),dp(8),dp(12),dp(8));
         panel.setBackgroundColor(0xEE202020);
         TextView icon=new TextView(this);
-        icon.setText("🔊");icon.setTextColor(Color.WHITE);icon.setTextSize(18);
-        panel.addView(icon);
+        icon.setText("VOL");icon.setTextColor(Color.WHITE);icon.setTextSize(11);
+        icon.setGravity(Gravity.CENTER);
+        panel.addView(icon,new LinearLayout.LayoutParams(dp(36),dp(48)));
         volumeSlider=new SeekBar(this);
-        volumeSlider.setMax(100);
         AudioManager audio=(AudioManager)getSystemService(Context.AUDIO_SERVICE);
-        if(audio!=null){
-            int max=audio.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
-            int current=audio.getStreamVolume(AudioManager.STREAM_MUSIC);
-            volumeSlider.setProgress(max==0?0:current*100/max);
-        }
+        int maxVolume=audio==null?15:audio.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
+        volumeSlider.setMax(Math.max(1,maxVolume));
+        volumeSlider.setPadding(dp(8),0,dp(8),0);
+        volumeSlider.setThumbOffset(dp(12));
+        if(audio!=null)volumeSlider.setProgress(audio.getStreamVolume(AudioManager.STREAM_MUSIC));
         volumeSlider.setFocusable(true);
         volumeSlider.setContentDescription("Nivel de volumen");
         volumeSlider.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener(){
@@ -274,16 +274,18 @@ public class StreamPlayerActivity extends Activity {
                 if(fromUser){
                     AudioManager manager=(AudioManager)getSystemService(Context.AUDIO_SERVICE);
                     if(manager!=null){
-                        int max=manager.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
-                        manager.setStreamVolume(AudioManager.STREAM_MUSIC,Math.round(max*progress/100f),0);
+                        manager.setStreamVolume(AudioManager.STREAM_MUSIC,progress,0);
                     }
                 }
             }
             @Override public void onStartTrackingTouch(SeekBar seekBar){}
             @Override public void onStopTrackingTouch(SeekBar seekBar){}
         });
-        panel.addView(volumeSlider,new LinearLayout.LayoutParams(dp(190),dp(48)));
-        volumePopup=new PopupWindow(panel,dp(245),dp(64),true);
+        FrameLayout sliderContainer=new FrameLayout(this);
+        panel.addView(sliderContainer,new LinearLayout.LayoutParams(dp(180),dp(48)));
+        FrameLayout.LayoutParams sliderLayout=new FrameLayout.LayoutParams(-1,dp(40),Gravity.CENTER_VERTICAL);
+        sliderContainer.addView(volumeSlider,sliderLayout);
+        volumePopup=new PopupWindow(panel,dp(250),dp(64),true);
         volumePopup.setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(0xEE202020));
         volumePopup.setOutsideTouchable(true);
         volumePopup.setOnDismissListener(()->{
