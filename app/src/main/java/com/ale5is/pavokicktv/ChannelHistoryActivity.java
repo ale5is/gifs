@@ -16,6 +16,9 @@ import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.text.SpannableString;
+import android.text.Spanned;
+import android.text.style.ForegroundColorSpan;
 import java.net.URL;
 import java.util.List;
 
@@ -73,19 +76,68 @@ public class ChannelHistoryActivity extends Activity {
         setContentView(root);
     }
     private void loadVideos(){
-        list.removeAllViews();list.addView(text("Cargando historial de KICK...",17,false));
+        list.removeAllViews();
+        TextView loading=text("Comprobando directo y videos...",17,false);
+        list.addView(loading);
+        KickVodResolver.checkLive(channel,live->{
+            if(isFinishing())return;
+            list.removeAllViews();
+            if(live)addLiveVideo();
+            loadPreviousVideos();
+        });
+    }
+    private void loadPreviousVideos(){
         KickVodResolver.load(channel,new KickVodResolver.ListCallback(){
             @Override public void onSuccess(List<KickVodResolver.Vod> videos){
-                if(isFinishing())return;list.removeAllViews();list.addView(text(videos.size()+" emisiones encontradas",13,false));
+                if(isFinishing())return;
+                TextView heading=text("VIDEOS ANTERIORES · "+videos.size(),13,true);
+                list.addView(heading);
                 for(KickVodResolver.Vod vod:videos)addVideo(vod);
                 if(list.getChildCount()>1)list.getChildAt(1).requestFocus();
+                else if(list.getChildCount()>0)list.getChildAt(0).requestFocus();
             }
             @Override public void onError(String message){
-                if(isFinishing())return;list.removeAllViews();list.addView(text(message,17,false));
+                if(isFinishing())return;
+                list.addView(text(message,15,false));
                 Button retry=new Button(ChannelHistoryActivity.this);retry.setText("REINTENTAR");addButtonFocus(retry);retry.setOnClickListener(v->loadVideos());list.addView(retry);
                 Toast.makeText(ChannelHistoryActivity.this,message,Toast.LENGTH_LONG).show();
             }
         });
+    }
+    private void addLiveVideo(){
+        LinearLayout row=new LinearLayout(this);
+        row.setOrientation(LinearLayout.HORIZONTAL);
+        row.setGravity(Gravity.CENTER_VERTICAL);
+        row.setPadding(dp(12),dp(12),dp(12),dp(12));
+        row.setBackgroundColor(Color.rgb(31,35,40));
+        TextView title=text("●  EN VIVO · "+channel,18,true);
+        SpannableString liveTitle=new SpannableString(title.getText());
+        liveTitle.setSpan(new ForegroundColorSpan(Color.rgb(50,210,100)),0,1,Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        title.setText(liveTitle);
+        row.addView(title,new LinearLayout.LayoutParams(0,dp(48),1));
+        TextView hint=text("VER DIRECTO",13,true);
+        row.addView(hint);
+        row.setFocusable(true);
+        row.setClickable(true);
+        final android.graphics.drawable.Drawable normal=row.getBackground();
+        row.setOnFocusChangeListener((view,focused)->{
+            if(focused){
+                android.graphics.drawable.GradientDrawable selected=new android.graphics.drawable.GradientDrawable();
+                selected.setColor(0xFF263D50);
+                selected.setCornerRadius(dp(7));
+                selected.setStroke(dp(2),0xFF42B8F4);
+                view.setBackground(selected);
+            }else view.setBackground(normal);
+        });
+        LinearLayout.LayoutParams params=new LinearLayout.LayoutParams(-1,dp(76));
+        params.bottomMargin=dp(10);
+        list.addView(row,0,params);
+        row.setOnClickListener(v->{
+            Intent intent=new Intent(this,StreamPlayerActivity.class);
+            intent.putExtra(StreamPlayerActivity.EXTRA_CHANNEL,channel);
+            startActivity(intent);
+        });
+        row.requestFocus();
     }
     private void addVideo(KickVodResolver.Vod vod){
         LinearLayout row=new LinearLayout(this);row.setOrientation(LinearLayout.HORIZONTAL);row.setGravity(Gravity.CENTER_VERTICAL);
