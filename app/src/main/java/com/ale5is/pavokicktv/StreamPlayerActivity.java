@@ -165,10 +165,16 @@ public class StreamPlayerActivity extends Activity {
                 }
                 controlsHiddenByCenter=false;
                 if(topBar!=null)topBar.setVisibility(navigationZone==0?View.VISIBLE:View.GONE);
-                android.graphics.drawable.GradientDrawable outline=new android.graphics.drawable.GradientDrawable();
-                outline.setColor(0x6633B5E5);outline.setCornerRadius(dp(6));
-                outline.setStroke(dp(4),0xFFFFFFFF);v.setBackground(outline);
-                v.setScaleX(1.08f);v.setScaleY(1.08f);
+                if(v.getId()==com.google.android.exoplayer2.ui.R.id.exo_progress){
+                    // El foco del progreso se representa con el cursor circular propio de ExoPlayer.
+                    v.setBackground(original);
+                    v.setScaleX(1f);v.setScaleY(1f);
+                }else{
+                    android.graphics.drawable.GradientDrawable outline=new android.graphics.drawable.GradientDrawable();
+                    outline.setColor(0x6633B5E5);outline.setCornerRadius(dp(6));
+                    outline.setStroke(dp(4),0xFFFFFFFF);v.setBackground(outline);
+                    v.setScaleX(1.08f);v.setScaleY(1.08f);
+                }
             }else{
                 v.setBackground(original);v.setScaleX(1f);v.setScaleY(1f);
             }
@@ -317,7 +323,7 @@ public class StreamPlayerActivity extends Activity {
         FrameLayout sliderContainer=new FrameLayout(this);
         panel.addView(sliderContainer,new LinearLayout.LayoutParams(dp(180),dp(48)));
         FrameLayout.LayoutParams sliderLayout=new FrameLayout.LayoutParams(-1,dp(40),Gravity.CENTER_VERTICAL);
-        sliderLayout.topMargin=dp(2);
+        sliderLayout.topMargin=dp(4);
         sliderContainer.addView(volumeSlider,sliderLayout);
         volumePopup=new PopupWindow(panel,dp(250),dp(64),true);
         volumePopup.setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(0xEE202020));
@@ -353,7 +359,14 @@ public class StreamPlayerActivity extends Activity {
                 if(navigationZone==1){showTopZone();return true;}
             }
             if(key==KeyEvent.KEYCODE_DPAD_DOWN){
-                if(navigationZone==0){hideHud();return true;}
+                if(navigationZone==0){showBottomZone();return true;}
+                if(navigationZone==2){
+                    View progress=playerView==null?null:playerView.findViewById(com.google.android.exoplayer2.ui.R.id.exo_progress);
+                    if(progress!=null && progress.isFocusable() && progress.getVisibility()==View.VISIBLE){
+                        progress.requestFocus();
+                        return true;
+                    }
+                }
                 if(navigationZone==1){showBottomZone();return true;}
             }
             if(navigationZone==1 && (key==KeyEvent.KEYCODE_DPAD_CENTER || key==KeyEvent.KEYCODE_ENTER))
