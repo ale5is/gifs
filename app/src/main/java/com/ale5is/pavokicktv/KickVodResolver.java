@@ -194,3 +194,40 @@ public final class KickVodResolver {
         return "";
     }
 
+
+    private static boolean isVideoId(String value) {
+        if (value == null) return false;
+        String id = value.trim();
+        return id.matches("(?i)[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}")
+                || id.matches("(?i)[0-9a-z]{26}");
+    }
+
+    private static String formatDuration(String raw, JSONObject item, JSONObject livestream) {
+        if (raw == null || raw.length() == 0) return "—";
+        try {
+            long value = Long.parseLong(raw);
+            boolean milliseconds = item.has("duration_ms") || livestream.has("duration")
+                    || value > 100000L;
+            long seconds = milliseconds ? value / 1000L : value;
+            if (seconds < 0) return raw;
+            long hours = seconds / 3600L;
+            long minutes = (seconds % 3600L) / 60L;
+            long remaining = seconds % 60L;
+            if (hours > 0) return String.format(java.util.Locale.US, "%d:%02d:%02d", hours, minutes, remaining);
+            return String.format(java.util.Locale.US, "%d:%02d", minutes, remaining);
+        } catch (Exception ignored) {
+            return raw;
+        }
+    }
+
+    private static String first(JSONObject object, String... keys) {
+        if (object == null) return "";
+        for (String key : keys) {
+            Object value = object.opt(key);
+            if (value == null || value == JSONObject.NULL || value instanceof JSONObject || value instanceof JSONArray) continue;
+            String text = String.valueOf(value).trim();
+            if (text.length() > 0 && !"0".equals(text)) return text;
+        }
+        return "";
+    }
+}
