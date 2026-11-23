@@ -164,6 +164,12 @@ public class MainActivity extends Activity {
             return true;
         });
 
+        Button history = makeButton("VER CANAL");
+        LinearLayout.LayoutParams historyParams = new LinearLayout.LayoutParams(dp(150), dp(52));
+        historyParams.leftMargin = dp(8);
+        searchRow.addView(history, historyParams);
+        history.setOnClickListener(v -> openChannelHistory(channelInput.getText().toString()));
+
         Button favorite = makeButton("☆ GUARDAR");
         LinearLayout.LayoutParams favoriteParams = new LinearLayout.LayoutParams(dp(150), dp(52));
         favoriteParams.leftMargin = dp(8);
@@ -256,6 +262,18 @@ public class MainActivity extends Activity {
         showHome();
         channelInput.setText(channel);
         channelInput.setSelection(channel.length());
+    }
+
+    private void openChannelHistory(String rawChannel) {
+        String channel = rawChannel.trim();
+        if (!CHANNEL_PATTERN.matcher(channel).matches()) {
+            if (channelInput != null) channelInput.setError("Escribe un nombre de canal válido");
+            return;
+        }
+        addRecent(channel);
+        Intent intent = new Intent(this, ChannelHistoryActivity.class);
+        intent.putExtra(ChannelHistoryActivity.EXTRA_CHANNEL, channel);
+        startActivity(intent);
     }
 
     private void openChannel(String rawChannel) {
