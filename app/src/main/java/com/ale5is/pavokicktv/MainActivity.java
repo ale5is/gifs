@@ -68,7 +68,9 @@ public class MainActivity extends Activity {
     private Button makeButton(String value) {
         Button button = new Button(this);
         button.setText(value);
-        button.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14);
+        button.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12);
+        button.setPadding(dp(3), 0, dp(3), 0);
+        button.setMinWidth(0);
         button.setFocusable(true);
         button.setFocusableInTouchMode(true);
         final android.graphics.drawable.Drawable normalBackground = button.getBackground();
@@ -77,10 +79,10 @@ public class MainActivity extends Activity {
                 android.graphics.drawable.GradientDrawable selected = new android.graphics.drawable.GradientDrawable();
                 selected.setColor(0xFF263D50);
                 selected.setCornerRadius(dp(6));
-                selected.setStroke(dp(3), 0xFF42B8F4);
+                selected.setStroke(dp(2), 0xFF42B8F4);
                 view.setBackground(selected);
-                view.setScaleX(1.04f);
-                view.setScaleY(1.04f);
+                view.setScaleX(1f);
+                view.setScaleY(1f);
             } else {
                 view.setBackground(normalBackground);
                 view.setScaleX(1f);
@@ -144,7 +146,7 @@ public class MainActivity extends Activity {
 
         root = new LinearLayout(this);
         root.setOrientation(LinearLayout.VERTICAL);
-        root.setPadding(dp(42), dp(20), dp(42), dp(18));
+        root.setPadding(dp(24), dp(20), dp(24), dp(18));
         root.setBackgroundColor(Color.rgb(15, 17, 20));
 
         TextView title = makeText("PavoKick TV", 30, true);
@@ -168,11 +170,11 @@ public class MainActivity extends Activity {
         channelInput.setSelectAllOnFocus(true);
         channelInput.setFocusable(true);
         channelInput.setFocusableInTouchMode(true);
-        searchRow.addView(channelInput, new LinearLayout.LayoutParams(dp(390), dp(54)));
+        searchRow.addView(channelInput, new LinearLayout.LayoutParams(0, dp(54), 2f));
 
         Button watch = makeButton("VER DIRECTO");
-        LinearLayout.LayoutParams watchParams = new LinearLayout.LayoutParams(dp(170), dp(52));
-        watchParams.leftMargin = dp(12);
+        LinearLayout.LayoutParams watchParams = new LinearLayout.LayoutParams(0, dp(52), 1f);
+        watchParams.leftMargin = dp(8);
         searchRow.addView(watch, watchParams);
         watch.setOnClickListener(v -> openChannel(channelInput.getText().toString()));
         channelInput.setOnEditorActionListener((view, actionId, event) -> {
@@ -181,14 +183,14 @@ public class MainActivity extends Activity {
         });
 
         Button history = makeButton("VER CANAL");
-        LinearLayout.LayoutParams historyParams = new LinearLayout.LayoutParams(dp(150), dp(52));
-        historyParams.leftMargin = dp(8);
+        LinearLayout.LayoutParams historyParams = new LinearLayout.LayoutParams(0, dp(52), 1f);
+        historyParams.leftMargin = dp(6);
         searchRow.addView(history, historyParams);
         history.setOnClickListener(v -> openChannelHistory(channelInput.getText().toString()));
 
         Button favorite = makeButton("☆ GUARDAR");
-        LinearLayout.LayoutParams favoriteParams = new LinearLayout.LayoutParams(dp(150), dp(52));
-        favoriteParams.leftMargin = dp(8);
+        LinearLayout.LayoutParams favoriteParams = new LinearLayout.LayoutParams(0, dp(52), 1f);
+        favoriteParams.leftMargin = dp(6);
         searchRow.addView(favorite, favoriteParams);
         favorite.setOnClickListener(v -> toggleFavorite(channelInput.getText().toString()));
         LinearLayout.LayoutParams searchParams = new LinearLayout.LayoutParams(
