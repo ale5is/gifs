@@ -2,6 +2,7 @@ package com.ale5is.pavokicktv;
 
 import android.app.Activity;
 import android.content.SharedPreferences;
+import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.graphics.Color;
 import android.graphics.Typeface;
@@ -31,7 +32,6 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 public class MainActivity extends Activity {
-    private static final String PLAYER_BASE = "https://player.kick.com/";
     private static final String PREFS = "pavokicktv";
     private static final String FAVORITES = "favorites";
     private static final String RECENTS = "recents";
@@ -265,6 +265,10 @@ public class MainActivity extends Activity {
             return;
         }
         addRecent(channel);
+        Intent intent = new Intent(this, StreamPlayerActivity.class);
+        intent.putExtra(StreamPlayerActivity.EXTRA_CHANNEL, channel);
+        startActivity(intent);
+        return;
 
         root = new LinearLayout(this);
         root.setOrientation(LinearLayout.VERTICAL);
