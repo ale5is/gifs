@@ -102,7 +102,7 @@ public class StreamPlayerActivity extends Activity {
             if(control!=null && control.isFocusable())addFocusHighlight(control);
         }
         playerView.setControllerVisibilityListener(visibility->{
-            if(topBar!=null && !controlsHiddenByCenter)topBar.setVisibility(visibility);
+            if(topBar!=null)topBar.setVisibility(navigationZone==0?View.VISIBLE:View.GONE);
         });
 
         trackSelector=new DefaultTrackSelector(this);
@@ -130,9 +130,12 @@ public class StreamPlayerActivity extends Activity {
         final android.graphics.drawable.Drawable original=view.getBackground();
         view.setOnFocusChangeListener((v,focused)->{
             if(focused){
+                navigationZone=(v.getParent()==topBar)?0:2;
+                controlsHiddenByCenter=false;
+                if(topBar!=null)topBar.setVisibility(navigationZone==0?View.VISIBLE:View.GONE);
                 android.graphics.drawable.GradientDrawable outline=new android.graphics.drawable.GradientDrawable();
-                outline.setColor(0x3329B6F6);outline.setCornerRadius(dp(5));
-                outline.setStroke(dp(2),0xFF29B6F6);v.setBackground(outline);
+                outline.setColor(0x4429B6F6);outline.setCornerRadius(dp(5));
+                outline.setStroke(dp(3),0xFF29B6F6);v.setBackground(outline);
             }else v.setBackground(original);
         });
     }
