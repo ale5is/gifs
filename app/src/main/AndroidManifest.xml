@@ -1,6 +1,11 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <uses-permission android:name="android.permission.INTERNET" />
     <application
+        <activity
+            android:name=".ChannelClipsActivity"
+            android:configChanges="keyboard|keyboardHidden|orientation|screenSize"
+            android:screenOrientation="landscape"
+            android:exported="false" />
         android:allowBackup="false"
         android:label="PavoKick TV"
         android:usesCleartextTraffic="false"
