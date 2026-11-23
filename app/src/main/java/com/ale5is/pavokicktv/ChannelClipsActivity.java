@@ -75,15 +75,26 @@ public class ChannelClipsActivity extends Activity {
         row.setFocusable(true);row.setClickable(true);
         LinearLayout.LayoutParams p=new LinearLayout.LayoutParams(-1,dp(120));p.topMargin=dp(7);list.addView(row,p);
         row.setOnClickListener(v->{
-            if(clip.playback==null || !clip.playback.startsWith("http") || !clip.playback.contains(".m3u8")){
+            if(clip.playback!=null && clip.playback.startsWith("http") && clip.playback.contains(".m3u8")){
+                openClip(clip.title,clip.playback);
+                return;
+            }
+            if(clip.id==null || !clip.id.startsWith("clip_")){
                 android.widget.Toast.makeText(this,"KICK no entregó la URL reproducible de este clip.",android.widget.Toast.LENGTH_LONG).show();return;
             }
-            Intent intent=new Intent(this,StreamPlayerActivity.class);
-            intent.putExtra(StreamPlayerActivity.EXTRA_CHANNEL,channel);
-            intent.putExtra(StreamPlayerActivity.EXTRA_VOD_TITLE,clip.title);
-            intent.putExtra(StreamPlayerActivity.EXTRA_MEDIA_URL,clip.playback);
-            startActivity(intent);
+            android.widget.Toast.makeText(this,"Preparando clip...",android.widget.Toast.LENGTH_SHORT).show();
+            KickClipsResolver.resolvePlayback(clip.id,new KickClipsResolver.CallbackPlayback(){
+                @Override public void onSuccess(String url){if(!isFinishing())openClip(clip.title,url);}
+                @Override public void onError(String message){if(!isFinishing())android.widget.Toast.makeText(ChannelClipsActivity.this,message,android.widget.Toast.LENGTH_LONG).show();}
+            });
         });
+    }
+    private void openClip(String title,String url){
+        Intent intent=new Intent(this,StreamPlayerActivity.class);
+        intent.putExtra(StreamPlayerActivity.EXTRA_CHANNEL,channel);
+        intent.putExtra(StreamPlayerActivity.EXTRA_VOD_TITLE,title);
+        intent.putExtra(StreamPlayerActivity.EXTRA_MEDIA_URL,url);
+        startActivity(intent);
     }
     private void loadImage(ImageView target,String url){
         target.setTag(url);
