@@ -23,6 +23,7 @@ import android.widget.HorizontalScrollView;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
+import android.widget.Toast;
 import android.widget.FrameLayout;
 import android.util.TypedValue;
 import java.util.ArrayList;
@@ -176,7 +177,7 @@ public class MainActivity extends Activity {
         addChannelSection("TUS FAVORITOS", FAVORITES);
         addChannelSection("VISTOS RECIENTEMENTE", RECENTS);
 
-        TextView footer = makeText("Usa el control remoto para elegir un canal · Android 5.1+", 12, false);
+        TextView footer = makeText("OK: abrir canal · Mantener OK: quitar de favoritos o historial · Android 5.1+", 12, false);
         LinearLayout.LayoutParams footerParams = new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
         footerParams.topMargin = dp(12);
@@ -215,6 +216,10 @@ public class MainActivity extends Activity {
                 itemParams.rightMargin = dp(8);
                 row.addView(item, itemParams);
                 item.setOnClickListener(v -> openChannel(channel));
+                item.setOnLongClickListener(v -> {
+                    removeChannel(key, channel);
+                    return true;
+                });
             }
         }
         scroller.addView(row);
@@ -222,6 +227,16 @@ public class MainActivity extends Activity {
                 ViewGroup.LayoutParams.MATCH_PARENT, dp(54));
         scrollerParams.topMargin = dp(6);
         root.addView(scroller, scrollerParams);
+    }
+
+    private void removeChannel(String key, String channel) {
+        List<String> values = readList(key);
+        if (!values.remove(channel)) return;
+        saveList(key, values);
+        Toast.makeText(this, key.equals(FAVORITES)
+                ? "Canal quitado de favoritos" : "Canal quitado del historial",
+                Toast.LENGTH_SHORT).show();
+        showHome();
     }
 
     private void toggleFavorite(String rawChannel) {
