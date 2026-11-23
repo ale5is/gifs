@@ -2,7 +2,7 @@
 
 Aplicación Android nativa para ver directos y emisiones anteriores de KICK en televisores Android antiguos.
 
-## Versión 0.5.0
+## Versión 0.5.1
 
 - Interfaz horizontal pensada para televisor y control remoto.
 - Búsqueda de canales por nombre.
