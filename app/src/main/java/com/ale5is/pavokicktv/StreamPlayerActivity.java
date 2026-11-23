@@ -49,6 +49,8 @@ public class StreamPlayerActivity extends Activity {
     private final java.util.Set<View> highlightedViews=new java.util.HashSet<>();
     private boolean controlsHiddenByCenter;
     private int navigationZone=0;
+    private View lastTopFocus;
+    private View lastPlaybackControl;
     private String channel, vodUuid, vodTitle, directMediaUrl;
 
     @Override protected void onCreate(Bundle state) {
@@ -145,6 +147,8 @@ public class StreamPlayerActivity extends Activity {
         view.setOnFocusChangeListener((v,focused)->{
             if(focused){
                 navigationZone=(v.getParent()==topBar || isDescendantOf(v,topBar))?0:2;
+                if(navigationZone==0)lastTopFocus=v;
+                else if(v.getId()!=com.google.android.exoplayer2.ui.R.id.exo_progress)lastPlaybackControl=v;
                 controlsHiddenByCenter=false;
                 if(topBar!=null)topBar.setVisibility(navigationZone==0?View.VISIBLE:View.GONE);
                 android.graphics.drawable.GradientDrawable outline=new android.graphics.drawable.GradientDrawable();
@@ -179,15 +183,21 @@ public class StreamPlayerActivity extends Activity {
         controlsHiddenByCenter=false;navigationZone=0;
         if(topBar!=null)topBar.setVisibility(View.VISIBLE);
         if(playerView!=null)playerView.hideController();
-        if(topBar!=null && topBar.getChildCount()>0)topBar.getChildAt(0).requestFocus();
+        View target=lastTopFocus;
+        if(target==null || !target.isFocusable() || target.getVisibility()!=View.VISIBLE)
+            target=topBar!=null && topBar.getChildCount()>0?topBar.getChildAt(0):null;
+        if(target!=null)target.requestFocus();
     }
     private void showBottomZone(){
         controlsHiddenByCenter=false;navigationZone=2;
         if(topBar!=null)topBar.setVisibility(View.GONE);
         if(playerView!=null)playerView.showController();
-        View target=playerView==null?null:playerView.findViewById(player!=null && player.isPlaying()
-                ?com.google.android.exoplayer2.ui.R.id.exo_pause:com.google.android.exoplayer2.ui.R.id.exo_play);
-        if(target==null && playerView!=null)target=playerView.findViewById(com.google.android.exoplayer2.ui.R.id.exo_play);
+        View target=lastPlaybackControl;
+        if(target==null || !target.isFocusable() || target.getVisibility()!=View.VISIBLE){
+            target=playerView==null?null:playerView.findViewById(player!=null && player.isPlaying()
+                    ?com.google.android.exoplayer2.ui.R.id.exo_pause:com.google.android.exoplayer2.ui.R.id.exo_play);
+            if(target==null && playerView!=null)target=playerView.findViewById(com.google.android.exoplayer2.ui.R.id.exo_play);
+        }
         if(target!=null)target.requestFocus();
     }
 
@@ -307,7 +317,15 @@ public class StreamPlayerActivity extends Activity {
             if(key==KeyEvent.KEYCODE_VOLUME_UP || key==KeyEvent.KEYCODE_VOLUME_DOWN)
                 return super.dispatchKeyEvent(event);
             if(key==KeyEvent.KEYCODE_DPAD_UP){
-                if(navigationZone==2){hideHud();return true;}
+                if(navigationZone==2){
+                    if(lastPlaybackControl!=null && lastPlaybackControl.isFocusable()
+                            && lastPlaybackControl.getVisibility()==View.VISIBLE){
+                        lastPlaybackControl.requestFocus();
+                        return true;
+                    }
+                    hideHud();
+                    return true;
+                }
                 if(navigationZone==1){showTopZone();return true;}
             }
             if(key==KeyEvent.KEYCODE_DPAD_DOWN){
