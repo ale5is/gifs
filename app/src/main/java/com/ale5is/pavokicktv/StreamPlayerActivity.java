@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.graphics.Color;
 import android.view.Gravity;
 import android.view.View;
+import android.view.KeyEvent;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.FrameLayout;
@@ -29,6 +30,7 @@ public class StreamPlayerActivity extends Activity {
     private DefaultTrackSelector trackSelector;
     private PlayerView playerView;
     private TextView status;
+    private LinearLayout topBar;
     private String channel;
 
     @Override
@@ -53,36 +55,39 @@ public class StreamPlayerActivity extends Activity {
         playerView = new PlayerView(this);
         playerView.setUseController(true);
         playerView.setControllerAutoShow(true);
+        playerView.setControllerHideOnTouch(true);
         playerView.setResizeMode(AspectRatioFrameLayout.RESIZE_MODE_FIT);
         playerView.setShowBuffering(PlayerView.SHOW_BUFFERING_ALWAYS);
         frame.addView(playerView, new FrameLayout.LayoutParams(
                 FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT));
 
-        LinearLayout top = new LinearLayout(this);
-        top.setOrientation(LinearLayout.HORIZONTAL);
-        top.setGravity(Gravity.CENTER_VERTICAL);
-        top.setPadding(12, 8, 12, 8);
-        top.setBackgroundColor(0x99000000);
+        topBar = new LinearLayout(this);
+        topBar.setOrientation(LinearLayout.HORIZONTAL);
+        topBar.setGravity(Gravity.CENTER_VERTICAL);
+        topBar.setPadding(12, 8, 12, 8);
+        topBar.setBackgroundColor(0x99000000);
 
         Button back = new Button(this);
         back.setText("VOLVER");
         back.setOnClickListener(v -> finish());
-        top.addView(back);
+        back.setFocusable(true);
+        topBar.addView(back);
 
         TextView name = new TextView(this);
         name.setText("  " + channel);
         name.setTextColor(Color.WHITE);
         name.setTextSize(16);
-        top.addView(name, new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1));
+        topBar.addView(name, new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1));
 
         Button quality = new Button(this);
         quality.setText("CALIDAD");
         quality.setOnClickListener(this::showQualityMenu);
-        top.addView(quality);
+        quality.setFocusable(true);
+        topBar.addView(quality);
 
         FrameLayout.LayoutParams topParams = new FrameLayout.LayoutParams(
                 FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.WRAP_CONTENT, Gravity.TOP);
-        frame.addView(top, topParams);
+        frame.addView(topBar, topParams);
 
         status = new TextView(this);
         status.setText("Conectando con KICK...");
@@ -93,6 +98,10 @@ public class StreamPlayerActivity extends Activity {
                 FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.WRAP_CONTENT, Gravity.CENTER);
         frame.addView(status, statusParams);
         setContentView(frame);
+        topBar.setVisibility(View.VISIBLE);
+        playerView.setControllerVisibilityListener(visibility -> {
+            if (topBar != null) topBar.setVisibility(visibility);
+        });
 
         trackSelector = new DefaultTrackSelector(this);
         DefaultHttpDataSource.Factory dataSourceFactory = new DefaultHttpDataSource.Factory()
@@ -177,6 +186,23 @@ public class StreamPlayerActivity extends Activity {
             return true;
         });
         menu.show();
+    }
+
+    @Override
+    public boolean dispatchKeyEvent(KeyEvent event) {
+        if (playerView != null && !playerView.isControllerVisible()) {
+            int key = event.getKeyCode();
+            if (key == KeyEvent.KEYCODE_DPAD_CENTER
+                    || key == KeyEvent.KEYCODE_ENTER
+                    || key == KeyEvent.KEYCODE_DPAD_LEFT
+                    || key == KeyEvent.KEYCODE_DPAD_RIGHT
+                    || key == KeyEvent.KEYCODE_DPAD_UP
+                    || key == KeyEvent.KEYCODE_DPAD_DOWN) {
+                playerView.showController();
+                return true;
+            }
+        }
+        return super.dispatchKeyEvent(event);
     }
 
     @Override
