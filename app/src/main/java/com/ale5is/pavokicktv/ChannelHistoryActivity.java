@@ -3,6 +3,7 @@ package com.ale5is.pavokicktv;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
+import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.view.Gravity;
@@ -10,10 +11,12 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
+import java.net.URL;
 import java.util.List;
 
 public class ChannelHistoryActivity extends Activity {
@@ -21,116 +24,79 @@ public class ChannelHistoryActivity extends Activity {
     private LinearLayout list;
     private String channel;
 
-    @Override
-    protected void onCreate(Bundle state) {
+    @Override protected void onCreate(Bundle state) {
         super.onCreate(state);
-        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
+        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,WindowManager.LayoutParams.FLAG_FULLSCREEN);
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
-        channel = getIntent().getStringExtra(EXTRA_CHANNEL);
-        if (channel == null || channel.trim().length() == 0) {
-            finish();
-            return;
-        }
-        buildUi();
-        loadVideos();
+        channel=getIntent().getStringExtra(EXTRA_CHANNEL);
+        if(channel==null || channel.trim().length()==0){finish();return;}
+        buildUi();loadVideos();
     }
-
-    private int dp(float value) {
-        return (int) (value * getResources().getDisplayMetrics().density + 0.5f);
+    private int dp(float v){return (int)(v*getResources().getDisplayMetrics().density+0.5f);}
+    private TextView text(String value,int size,boolean bold){
+        TextView t=new TextView(this);t.setText(value);t.setTextColor(Color.WHITE);t.setTextSize(size);
+        if(bold)t.setTypeface(android.graphics.Typeface.DEFAULT,android.graphics.Typeface.BOLD);
+        return t;
     }
-
-    private TextView text(String value, int size, boolean bold) {
-        TextView view = new TextView(this);
-        view.setText(value);
-        view.setTextColor(Color.WHITE);
-        view.setTextSize(size);
-        if (bold) view.setTypeface(android.graphics.Typeface.DEFAULT, android.graphics.Typeface.BOLD);
-        return view;
-    }
-
-    private void buildUi() {
-        LinearLayout root = new LinearLayout(this);
-        root.setOrientation(LinearLayout.VERTICAL);
-        root.setPadding(dp(36), dp(18), dp(36), dp(18));
-        root.setBackgroundColor(Color.rgb(15, 17, 20));
-
-        LinearLayout header = new LinearLayout(this);
-        header.setGravity(Gravity.CENTER_VERTICAL);
-        Button back = new Button(this);
-        back.setText("VOLVER");
-        back.setFocusable(true);
-        back.setOnClickListener(v -> finish());
-        header.addView(back);
-
-        TextView heading = text("  VIDEOS ANTERIORES · " + channel, 22, true);
-        header.addView(heading, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1));
-        root.addView(header);
-
-        TextView hint = text("Selecciona una emisión para reproducirla", 13, false);
-        LinearLayout.LayoutParams hintParams = new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        hintParams.topMargin = dp(4);
-        root.addView(hint, hintParams);
-
-        ScrollView scroll = new ScrollView(this);
-        list = new LinearLayout(this);
-        list.setOrientation(LinearLayout.VERTICAL);
-        scroll.addView(list);
-        LinearLayout.LayoutParams scrollParams = new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT, 0, 1);
-        scrollParams.topMargin = dp(12);
-        root.addView(scroll, scrollParams);
+    private void buildUi(){
+        LinearLayout root=new LinearLayout(this);root.setOrientation(LinearLayout.VERTICAL);
+        root.setPadding(dp(30),dp(16),dp(30),dp(16));root.setBackgroundColor(Color.rgb(15,17,20));
+        LinearLayout header=new LinearLayout(this);header.setGravity(Gravity.CENTER_VERTICAL);
+        Button back=new Button(this);back.setText("VOLVER");back.setOnClickListener(v->finish());header.addView(back);
+        header.addView(text("  VIDEOS ANTERIORES · "+channel,21,true),new LinearLayout.LayoutParams(0,-2,1));
+        Button clips=new Button(this);clips.setText("CLIPS");clips.setOnClickListener(v->{
+            Intent i=new Intent(this,ChannelClipsActivity.class);i.putExtra(EXTRA_CHANNEL,channel);startActivity(i);
+        });header.addView(clips);root.addView(header);
+        root.addView(text("Selecciona una emisión para reproducirla",13,false));
+        ScrollView scroll=new ScrollView(this);list=new LinearLayout(this);list.setOrientation(LinearLayout.VERTICAL);scroll.addView(list);
+        LinearLayout.LayoutParams sp=new LinearLayout.LayoutParams(-1,0,1);sp.topMargin=dp(10);root.addView(scroll,sp);
         setContentView(root);
     }
-
-    private void loadVideos() {
-        list.removeAllViews();
-        TextView loading = text("Cargando historial de KICK...", 17, false);
-        list.addView(loading);
-        KickVodResolver.load(channel, new KickVodResolver.ListCallback() {
-            @Override
-            public void onSuccess(List<KickVodResolver.Vod> videos) {
-                if (isFinishing()) return;
-                list.removeAllViews();
-                TextView count = text(videos.size() + " emisiones encontradas", 13, false);
-                list.addView(count);
-                for (KickVodResolver.Vod vod : videos) addVideo(vod);
-                if (list.getChildCount() > 1) list.getChildAt(1).requestFocus();
+    private void loadVideos(){
+        list.removeAllViews();list.addView(text("Cargando historial de KICK...",17,false));
+        KickVodResolver.load(channel,new KickVodResolver.ListCallback(){
+            @Override public void onSuccess(List<KickVodResolver.Vod> videos){
+                if(isFinishing())return;list.removeAllViews();list.addView(text(videos.size()+" emisiones encontradas",13,false));
+                for(KickVodResolver.Vod vod:videos)addVideo(vod);
+                if(list.getChildCount()>1)list.getChildAt(1).requestFocus();
             }
-
-            @Override
-            public void onError(String message) {
-                if (isFinishing()) return;
-                list.removeAllViews();
-                TextView error = text(message, 17, false);
-                list.addView(error);
-                Button retry = new Button(ChannelHistoryActivity.this);
-                retry.setText("REINTENTAR");
-                retry.setOnClickListener(v -> loadVideos());
-                list.addView(retry);
-                Toast.makeText(ChannelHistoryActivity.this, message, Toast.LENGTH_LONG).show();
+            @Override public void onError(String message){
+                if(isFinishing())return;list.removeAllViews();list.addView(text(message,17,false));
+                Button retry=new Button(ChannelHistoryActivity.this);retry.setText("REINTENTAR");retry.setOnClickListener(v->loadVideos());list.addView(retry);
+                Toast.makeText(ChannelHistoryActivity.this,message,Toast.LENGTH_LONG).show();
             }
         });
     }
-
-    private void addVideo(KickVodResolver.Vod vod) {
-        Button item = new Button(this);
-        item.setAllCaps(false);
-        item.setText(vod.title + "\n" + vod.date + "  ·  " + vod.duration + "  ·  " + vod.views + " vistas");
-        item.setTextSize(14);
-        item.setGravity(Gravity.CENTER_VERTICAL | Gravity.LEFT);
-        item.setMinHeight(dp(76));
-        item.setFocusable(true);
-        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        params.topMargin = dp(6);
-        list.addView(item, params);
-        item.setOnClickListener(v -> {
-            Intent intent = new Intent(ChannelHistoryActivity.this, StreamPlayerActivity.class);
-            intent.putExtra(StreamPlayerActivity.EXTRA_CHANNEL, channel);
-            intent.putExtra(StreamPlayerActivity.EXTRA_VOD_UUID, vod.uuid);
-            intent.putExtra(StreamPlayerActivity.EXTRA_VOD_TITLE, vod.title);
+    private void addVideo(KickVodResolver.Vod vod){
+        LinearLayout row=new LinearLayout(this);row.setOrientation(LinearLayout.HORIZONTAL);row.setGravity(Gravity.CENTER_VERTICAL);
+        row.setPadding(dp(7),dp(6),dp(7),dp(6));row.setBackgroundColor(Color.rgb(31,35,40));
+        ImageView image=new ImageView(this);image.setBackgroundColor(Color.rgb(55,60,66));image.setScaleType(ImageView.ScaleType.CENTER_CROP);
+        row.addView(image,new LinearLayout.LayoutParams(dp(190),dp(106)));
+        if(vod.thumbnail!=null && vod.thumbnail.startsWith("http"))loadImage(image,vod.thumbnail);
+        LinearLayout info=new LinearLayout(this);info.setOrientation(LinearLayout.VERTICAL);info.setPadding(dp(12),0,0,0);
+        info.addView(text(vod.title,16,true));info.addView(text(vod.date+"  ·  "+vod.duration+"  ·  "+vod.views+" vistas",12,false));
+        row.addView(info,new LinearLayout.LayoutParams(0,-2,1));
+        row.setFocusable(true);row.setClickable(true);
+        LinearLayout.LayoutParams p=new LinearLayout.LayoutParams(-1,dp(120));p.topMargin=dp(7);list.addView(row,p);
+        row.setOnClickListener(v->{
+            Intent intent=new Intent(this,StreamPlayerActivity.class);
+            intent.putExtra(StreamPlayerActivity.EXTRA_CHANNEL,channel);
+            intent.putExtra(StreamPlayerActivity.EXTRA_VOD_UUID,vod.uuid);
+            intent.putExtra(StreamPlayerActivity.EXTRA_VOD_TITLE,vod.title);
+            intent.putExtra("vod_source",vod.source);
             startActivity(intent);
         });
+    }
+    private void loadImage(ImageView target,String url){
+        target.setTag(url);
+        new Thread(()->{
+            try{
+                java.net.HttpURLConnection c=(java.net.HttpURLConnection)new URL(url).openConnection();
+                c.setConnectTimeout(10000);c.setReadTimeout(15000);
+                c.setRequestProperty("User-Agent",KickStreamResolver.USER_AGENT);c.connect();
+                android.graphics.Bitmap bitmap=BitmapFactory.decodeStream(c.getInputStream());c.disconnect();
+                if(bitmap!=null)runOnUiThread(()->{if(url.equals(target.getTag()))target.setImageBitmap(bitmap);});
+            }catch(Exception ignored){}
+        },"KickVodThumbnail").start();
     }
 }
