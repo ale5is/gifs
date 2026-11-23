@@ -145,7 +145,7 @@ public class StreamPlayerActivity extends Activity {
     private void resolveAndPlay() {
         if (vodUuid != null && vodUuid.length() > 0) {
             status.setText("Preparando video anterior...");
-            KickVodResolver.resolvePlayback(vodUuid, new KickVodResolver.PlaybackCallback() {
+            KickVodResolver.resolvePlayback(vodUuid, getIntent().getStringExtra("vod_source"), new KickVodResolver.PlaybackCallback() {
                 @Override
                 public void onSuccess(String url) {
                     runOnUiThread(() -> playResolvedUrl(url));
