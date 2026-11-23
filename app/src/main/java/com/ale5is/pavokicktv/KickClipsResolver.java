@@ -81,8 +81,11 @@ public final class KickClipsResolver {
                 if(!response.isSuccessful() || response.body()==null) return "";
                 JSONObject root=new JSONObject(response.body().string());
                 JSONObject data=root.optJSONObject("data");
+                JSONObject clip=root.optJSONObject("clip");
                 String value=first(root,"video_url","playback_url","source");
                 if(value.length()==0 && data!=null) value=first(data,"video_url","playback_url","source");
+                if(value.length()==0 && clip!=null) value=first(clip,"video_url","playback_url","source");
+                if(value.length()==0 && data!=null) { JSONObject nested=data.optJSONObject("clip"); if(nested!=null) value=first(nested,"video_url","playback_url","source"); }
                 return value;
             }
         } catch(Exception ignored) { return ""; }
