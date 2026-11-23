@@ -73,6 +73,23 @@ public class ChannelClipsActivity extends Activity {
         info.addView(text(clip.date+"  ·  "+clip.duration+"  ·  "+clip.views+" vistas",12,false));
         row.addView(info,new LinearLayout.LayoutParams(0,-2,1));
         row.setFocusable(true);row.setClickable(true);
+        row.setFocusableInTouchMode(false);
+        final android.graphics.drawable.Drawable normalBackground=row.getBackground();
+        row.setOnFocusChangeListener((view,focused)->{
+            if(focused){
+                android.graphics.drawable.GradientDrawable selected=new android.graphics.drawable.GradientDrawable();
+                selected.setColor(0xFF263D50);
+                selected.setCornerRadius(dp(7));
+                selected.setStroke(dp(3),0xFF42B8F4);
+                view.setBackground(selected);
+                view.setScaleX(1.015f);
+                view.setScaleY(1.015f);
+            }else{
+                view.setBackground(normalBackground);
+                view.setScaleX(1f);
+                view.setScaleY(1f);
+            }
+        });
         LinearLayout.LayoutParams p=new LinearLayout.LayoutParams(-1,dp(120));p.topMargin=dp(7);list.addView(row,p);
         row.setOnClickListener(v->{
             if(clip.playback!=null && clip.playback.startsWith("http") && clip.playback.contains(".m3u8")){
