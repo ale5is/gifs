@@ -51,6 +51,8 @@ public class StreamPlayerActivity extends Activity {
     private int navigationZone=0;
     private View lastTopFocus;
     private View lastPlaybackControl;
+    private int lastPlaybackControlId=View.NO_ID;
+    private boolean changingFocus;
     private String channel, vodUuid, vodTitle, directMediaUrl;
 
     @Override protected void onCreate(Bundle state) {
@@ -154,26 +156,28 @@ public class StreamPlayerActivity extends Activity {
         final android.graphics.drawable.Drawable original=view.getBackground();
         view.setOnFocusChangeListener((v,focused)->{
             if(focused){
-                if(v.getParent()==topBar || isDescendantOf(v,topBar)){
-                    navigationZone=0;
-                    lastTopFocus=v;
-                }else if(v.getId()==com.google.android.exoplayer2.ui.R.id.exo_progress){
-                    navigationZone=3;
-                }else{
-                    navigationZone=2;
-                    lastPlaybackControl=v;
+                if(!changingFocus){
+                    if(v.getParent()==topBar || isDescendantOf(v,topBar)){
+                        navigationZone=0;
+                        lastTopFocus=v;
+                    }else if(v.getId()==com.google.android.exoplayer2.ui.R.id.exo_progress){
+                        navigationZone=3;
+                    }else if(isDescendantOf(v,playerView)){
+                        navigationZone=2;
+                        lastPlaybackControl=v;
+                        lastPlaybackControlId=v.getId();
+                    }
+                    controlsHiddenByCenter=false;
                 }
-                controlsHiddenByCenter=false;
                 if(topBar!=null)topBar.setVisibility(navigationZone==0?View.VISIBLE:View.GONE);
                 if(v.getId()==com.google.android.exoplayer2.ui.R.id.exo_progress){
-                    // El foco del progreso se representa con el cursor circular propio de ExoPlayer.
                     v.setBackground(original);
                     v.setScaleX(1f);v.setScaleY(1f);
                 }else{
                     android.graphics.drawable.GradientDrawable outline=new android.graphics.drawable.GradientDrawable();
                     outline.setColor(0x6633B5E5);outline.setCornerRadius(dp(6));
-                    outline.setStroke(dp(4),0xFFFFFFFF);v.setBackground(outline);
-                    v.setScaleX(1.08f);v.setScaleY(1.08f);
+                    outline.setStroke(dp(3),0xFFFFFFFF);v.setBackground(outline);
+                    v.setScaleX(1.04f);v.setScaleY(1.04f);
                 }
             }else{
                 v.setBackground(original);v.setScaleX(1f);v.setScaleY(1f);
@@ -197,37 +201,66 @@ public class StreamPlayerActivity extends Activity {
     private void hideHud(){
         View focused=getCurrentFocus();
         if(focused!=null){
-            if(focused==topBar || isDescendantOf(focused,topBar))lastTopFocus=focused;
-            else if(focused.getId()==com.google.android.exoplayer2.ui.R.id.exo_progress){
+            if(focused==topBar || isDescendantOf(focused,topBar)){
+                lastTopFocus=focused;
+            }else if(focused.getId()==com.google.android.exoplayer2.ui.R.id.exo_progress){
                 navigationZone=3;
             }else if(isDescendantOf(focused,playerView)){
                 lastPlaybackControl=focused;
+                lastPlaybackControlId=focused.getId();
             }
         }
-        controlsHiddenByCenter=true;navigationZone=1;
-        if(playerView!=null)playerView.hideController();
+        controlsHiddenByCenter=true;
+        navigationZone=1;
         if(topBar!=null)topBar.setVisibility(View.GONE);
+        if(playerView!=null)playerView.hideController();
+        View current=getCurrentFocus();
+        if(current!=null)current.clearFocus();
     }
+
     private void showTopZone(){
-        controlsHiddenByCenter=false;navigationZone=0;
+        controlsHiddenByCenter=false;
+        navigationZone=0;
         if(topBar!=null)topBar.setVisibility(View.VISIBLE);
         if(playerView!=null)playerView.hideController();
-        View target=lastTopFocus;
-        if(target==null || !target.isFocusable() || target.getVisibility()!=View.VISIBLE)
-            target=topBar!=null && topBar.getChildCount()>0?topBar.getChildAt(0):null;
-        if(target!=null)target.requestFocus();
+        if(topBar!=null)topBar.post(()->{
+            View target=lastTopFocus;
+            if(target==null || !target.isFocusable() || target.getVisibility()!=View.VISIBLE)
+                target=topBar.getChildCount()>0?topBar.getChildAt(0):null;
+            if(target!=null){
+                changingFocus=true;
+                target.requestFocus();
+                changingFocus=false;
+                lastTopFocus=target;
+            }
+        });
     }
+
     private void showBottomZone(){
-        controlsHiddenByCenter=false;navigationZone=2;
+        controlsHiddenByCenter=false;
+        navigationZone=2;
         if(topBar!=null)topBar.setVisibility(View.GONE);
-        if(playerView!=null)playerView.showController();
-        View target=lastPlaybackControl;
-        if(target==null || !target.isFocusable() || target.getVisibility()!=View.VISIBLE){
-            target=playerView==null?null:playerView.findViewById(player!=null && player.isPlaying()
-                    ?com.google.android.exoplayer2.ui.R.id.exo_pause:com.google.android.exoplayer2.ui.R.id.exo_play);
-            if(target==null && playerView!=null)target=playerView.findViewById(com.google.android.exoplayer2.ui.R.id.exo_play);
+        if(playerView!=null){
+            playerView.showController();
+            playerView.post(()->{
+                View target=lastPlaybackControlId!=View.NO_ID
+                        ?playerView.findViewById(lastPlaybackControlId):lastPlaybackControl;
+                if(target==null || !target.isFocusable() || target.getVisibility()!=View.VISIBLE){
+                    target=playerView.findViewById(player!=null && player.isPlaying()
+                            ?com.google.android.exoplayer2.ui.R.id.exo_pause
+                            :com.google.android.exoplayer2.ui.R.id.exo_play);
+                }
+                if(target==null || !target.isFocusable() || target.getVisibility()!=View.VISIBLE)
+                    target=playerView.findViewById(com.google.android.exoplayer2.ui.R.id.exo_play);
+                if(target!=null){
+                    changingFocus=true;
+                    target.requestFocus();
+                    changingFocus=false;
+                    lastPlaybackControl=target;
+                    lastPlaybackControlId=target.getId();
+                }
+            });
         }
-        if(target!=null)target.requestFocus();
     }
 
     private void resolveAndPlay(){
@@ -345,33 +378,62 @@ public class StreamPlayerActivity extends Activity {
         if(event.getAction()==KeyEvent.ACTION_DOWN){
             if(key==KeyEvent.KEYCODE_VOLUME_UP || key==KeyEvent.KEYCODE_VOLUME_DOWN)
                 return super.dispatchKeyEvent(event);
+
             if(key==KeyEvent.KEYCODE_DPAD_UP){
                 if(navigationZone==3){
-                    if(lastPlaybackControl!=null && lastPlaybackControl.isFocusable()
-                            && lastPlaybackControl.getVisibility()==View.VISIBLE){
-                        lastPlaybackControl.requestFocus();
-                        return true;
+                    if(lastPlaybackControlId!=View.NO_ID && playerView!=null){
+                        View target=playerView.findViewById(lastPlaybackControlId);
+                        if(target!=null && target.isFocusable() && target.getVisibility()==View.VISIBLE){
+                            changingFocus=true;
+                            target.requestFocus();
+                            changingFocus=false;
+                            navigationZone=2;
+                            return true;
+                        }
                     }
                     showBottomZone();
                     return true;
                 }
-                if(navigationZone==2){showTopZone();return true;}
-                if(navigationZone==1){showTopZone();return true;}
-            }
-            if(key==KeyEvent.KEYCODE_DPAD_DOWN){
-                if(navigationZone==0){hideHud();return true;}
-                if(navigationZone==1){showBottomZone();return true;}
                 if(navigationZone==2){
-                    View progress=playerView==null?null:playerView.findViewById(com.google.android.exoplayer2.ui.R.id.exo_progress);
-                    if(progress!=null && progress.isFocusable() && progress.getVisibility()==View.VISIBLE){
-                        progress.requestFocus();
-                        return true;
-                    }
+                    hideHud();
+                    return true;
+                }
+                if(navigationZone==1){
+                    showTopZone();
+                    return true;
                 }
             }
-            if(navigationZone==1 && (key==KeyEvent.KEYCODE_DPAD_CENTER || key==KeyEvent.KEYCODE_ENTER))
-                return true;
-            if(navigationZone==1 && (key==KeyEvent.KEYCODE_DPAD_LEFT || key==KeyEvent.KEYCODE_DPAD_RIGHT))
+
+            if(key==KeyEvent.KEYCODE_DPAD_DOWN){
+                if(navigationZone==0){
+                    hideHud();
+                    return true;
+                }
+                if(navigationZone==1){
+                    showBottomZone();
+                    return true;
+                }
+                if(navigationZone==2){
+                    View progress=playerView==null?null:
+                            playerView.findViewById(com.google.android.exoplayer2.ui.R.id.exo_progress);
+                    if(progress!=null && progress.isFocusable() && progress.getVisibility()==View.VISIBLE){
+                        changingFocus=true;
+                        progress.requestFocus();
+                        changingFocus=false;
+                        navigationZone=3;
+                        return true;
+                    }
+                    hideHud();
+                    return true;
+                }
+                if(navigationZone==3){
+                    hideHud();
+                    return true;
+                }
+            }
+
+            if(navigationZone==1 && (key==KeyEvent.KEYCODE_DPAD_CENTER || key==KeyEvent.KEYCODE_ENTER
+                    || key==KeyEvent.KEYCODE_DPAD_LEFT || key==KeyEvent.KEYCODE_DPAD_RIGHT))
                 return true;
         }
         return super.dispatchKeyEvent(event);
