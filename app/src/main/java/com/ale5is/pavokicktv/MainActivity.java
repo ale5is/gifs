@@ -27,6 +27,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.FrameLayout;
 import android.util.TypedValue;
+import android.text.TextUtils;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -239,7 +240,11 @@ public class MainActivity extends Activity {
         } else {
             for (String channel : channels) {
                 Button item = makeButton(channel);
-                LinearLayout.LayoutParams itemParams = new LinearLayout.LayoutParams(dp(150), dp(48));
+                item.setSingleLine(true);
+                item.setEllipsize(TextUtils.TruncateAt.END);
+                item.setMaxWidth(dp(180));
+                LinearLayout.LayoutParams itemParams = new LinearLayout.LayoutParams(
+                        ViewGroup.LayoutParams.WRAP_CONTENT, dp(44));
                 itemParams.rightMargin = dp(8);
                 row.addView(item, itemParams);
                 item.setOnClickListener(v -> openChannel(channel));
