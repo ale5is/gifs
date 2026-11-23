@@ -71,6 +71,22 @@ public class MainActivity extends Activity {
         button.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14);
         button.setFocusable(true);
         button.setFocusableInTouchMode(true);
+        final android.graphics.drawable.Drawable normalBackground = button.getBackground();
+        button.setOnFocusChangeListener((view, focused) -> {
+            if (focused) {
+                android.graphics.drawable.GradientDrawable selected = new android.graphics.drawable.GradientDrawable();
+                selected.setColor(0xFF263D50);
+                selected.setCornerRadius(dp(6));
+                selected.setStroke(dp(3), 0xFF42B8F4);
+                view.setBackground(selected);
+                view.setScaleX(1.04f);
+                view.setScaleY(1.04f);
+            } else {
+                view.setBackground(normalBackground);
+                view.setScaleX(1f);
+                view.setScaleY(1f);
+            }
+        });
         return button;
     }
 
