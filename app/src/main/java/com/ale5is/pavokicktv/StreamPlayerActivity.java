@@ -386,15 +386,24 @@ public class StreamPlayerActivity extends Activity {
                     if(progress!=null && progress.isFocusable() && progress.getVisibility()==View.VISIBLE){
                         View target=lastPlaybackControlId!=View.NO_ID
                                 ?playerView.findViewById(lastPlaybackControlId):lastPlaybackControl;
-                        if(target==null || !target.isFocusable() || target.getVisibility()!=View.VISIBLE)
-                            target=playerView.findViewById(com.google.android.exoplayer2.ui.R.id.exo_play);
-                        if(target!=null){
-                            changingFocus=true;
-                            target.requestFocus();
-                            changingFocus=false;
-                            navigationZone=2;
-                            return true;
+                        if(target==null || !target.isFocusable() || target.getVisibility()!=View.VISIBLE){
+                            target=playerView.findViewById(player!=null && player.isPlaying()
+                                    ?com.google.android.exoplayer2.ui.R.id.exo_pause
+                                    :com.google.android.exoplayer2.ui.R.id.exo_play);
                         }
+                        if(target!=null && target.isFocusable() && target.getVisibility()==View.VISIBLE){
+                            changingFocus=true;
+                            boolean focused=target.requestFocus();
+                            changingFocus=false;
+                            if(focused){
+                                navigationZone=2;
+                                lastPlaybackControl=target;
+                                lastPlaybackControlId=target.getId();
+                                return true;
+                            }
+                        }
+                        showBottomZone();
+                        return true;
                     }
                     showBottomZone();
                     return true;
