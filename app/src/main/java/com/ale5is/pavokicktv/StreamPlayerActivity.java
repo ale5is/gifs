@@ -284,6 +284,7 @@ public class StreamPlayerActivity extends Activity {
         FrameLayout sliderContainer=new FrameLayout(this);
         panel.addView(sliderContainer,new LinearLayout.LayoutParams(dp(180),dp(48)));
         FrameLayout.LayoutParams sliderLayout=new FrameLayout.LayoutParams(-1,dp(40),Gravity.CENTER_VERTICAL);
+        sliderLayout.topMargin=dp(2);
         sliderContainer.addView(volumeSlider,sliderLayout);
         volumePopup=new PopupWindow(panel,dp(250),dp(64),true);
         volumePopup.setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(0xEE202020));
