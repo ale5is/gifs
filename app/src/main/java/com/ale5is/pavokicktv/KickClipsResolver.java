@@ -58,7 +58,6 @@ public final class KickClipsResolver {
                         String duration=first(item,"duration","duration_seconds","durationSeconds");
                         String views=first(item,"view_count","views","views_count");
                         if(title.length()==0) title="Clip de " + channel;
-                        if(playback.length()==0 && id.startsWith("clip_")) playback=resolveClip(id);
                         clips.add(new Clip(id,title,thumbnail,playback,date,formatDuration(duration),views));
                     }
                 }
@@ -70,6 +69,18 @@ public final class KickClipsResolver {
             }
         },"KickClipsList").start();
     }
+
+    public static void resolvePlayback(String id, CallbackPlayback callback) {
+        new Thread(() -> {
+            String url = resolveClip(id);
+            if (url != null && url.startsWith("http") && url.contains(".m3u8")) {
+                MAIN.post(() -> callback.onSuccess(url));
+            } else {
+                MAIN.post(() -> callback.onError("KICK no entregó la URL reproducible de este clip."));
+            }
+        }, "KickClipPlayback").start();
+    }
+    public interface CallbackPlayback { void onSuccess(String url); void onError(String message); }
 
     private static String resolveClip(String id) {
         try {
