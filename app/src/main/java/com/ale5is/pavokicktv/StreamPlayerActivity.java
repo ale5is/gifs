@@ -381,9 +381,14 @@ public class StreamPlayerActivity extends Activity {
 
             if(key==KeyEvent.KEYCODE_DPAD_UP){
                 if(navigationZone==3){
-                    if(lastPlaybackControlId!=View.NO_ID && playerView!=null){
-                        View target=playerView.findViewById(lastPlaybackControlId);
-                        if(target!=null && target.isFocusable() && target.getVisibility()==View.VISIBLE){
+                    View progress=playerView==null?null:
+                            playerView.findViewById(com.google.android.exoplayer2.ui.R.id.exo_progress);
+                    if(progress!=null && progress.isFocusable() && progress.getVisibility()==View.VISIBLE){
+                        View target=lastPlaybackControlId!=View.NO_ID
+                                ?playerView.findViewById(lastPlaybackControlId):lastPlaybackControl;
+                        if(target==null || !target.isFocusable() || target.getVisibility()!=View.VISIBLE)
+                            target=playerView.findViewById(com.google.android.exoplayer2.ui.R.id.exo_play);
+                        if(target!=null){
                             changingFocus=true;
                             target.requestFocus();
                             changingFocus=false;
@@ -423,11 +428,9 @@ public class StreamPlayerActivity extends Activity {
                         navigationZone=3;
                         return true;
                     }
-                    hideHud();
                     return true;
                 }
                 if(navigationZone==3){
-                    hideHud();
                     return true;
                 }
             }
