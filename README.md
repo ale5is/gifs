@@ -1,19 +1,24 @@
 # PavoKick TV
 
-Aplicación Android nativa para probar KICK en televisores Android antiguos (Android 5.1 / API 22).
+Aplicación Android nativa para ver directos de KICK en televisores Android antiguos.
 
-## Estado
+## Versión 0.2.0
 
-Prototipo experimental 0.1.0. Permite introducir un canal y abrir el reproductor web de KICK. La compatibilidad del reproductor con WebView de Android 5.1 debe comprobarse en el televisor físico.
+- Interfaz nativa horizontal pensada para televisor y control remoto.
+- Entrada directa de nombre de canal.
+- Favoritos persistentes (hasta 12 canales).
+- Historial local de los últimos 8 canales abiertos.
+- Abre únicamente el reproductor oficial `player.kick.com`, no la página completa del canal.
+- Botón de pantalla completa y modo inmersivo.
+- Cierra y libera el WebView al volver a la pantalla principal.
+
+## Compatibilidad
+
+- Android mínimo: 5.1 (API 22).
+- Java 8.
+- Interfaz horizontal; referencia de prueba: 1280x720 y 1 GB de RAM.
+- No se garantiza que el reproductor moderno de KICK funcione en el WebView antiguo del televisor; debe probarse en el dispositivo físico.
 
 ## Compilación
 
-El workflow de GitHub Actions compila el APK debug y lo publica como artefacto descargable.
-
-## Requisitos de referencia
-
-- Android mínimo: 5.1 (API 22)
-- Interfaz horizontal, control remoto y resolución 1280x720
-- Java 8 en el código de la aplicación
-
-No se garantiza que el reproductor moderno de KICK funcione en el WebView antiguo del televisor.
+GitHub Actions compila el APK debug y lo publica como artefacto descargable.
