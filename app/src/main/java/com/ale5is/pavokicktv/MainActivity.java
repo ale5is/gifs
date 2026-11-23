@@ -172,21 +172,21 @@ public class MainActivity extends Activity {
         channelInput.setFocusableInTouchMode(true);
         searchRow.addView(channelInput, new LinearLayout.LayoutParams(0, dp(54), 2f));
 
-        Button watch = makeButton("VER DIRECTO");
+        Button watch = makeButton("BUSCAR");
         LinearLayout.LayoutParams watchParams = new LinearLayout.LayoutParams(0, dp(52), 1f);
         watchParams.leftMargin = dp(8);
         searchRow.addView(watch, watchParams);
-        watch.setOnClickListener(v -> openChannel(channelInput.getText().toString()));
+        watch.setOnClickListener(v -> openChannelHistory(channelInput.getText().toString()));
         channelInput.setOnEditorActionListener((view, actionId, event) -> {
-            openChannel(channelInput.getText().toString());
+            openChannelHistory(channelInput.getText().toString());
             return true;
         });
 
-        Button history = makeButton("VER CANAL");
+        Button history = makeButton(" ");
         LinearLayout.LayoutParams historyParams = new LinearLayout.LayoutParams(0, dp(52), 1f);
         historyParams.leftMargin = dp(6);
         searchRow.addView(history, historyParams);
-        history.setOnClickListener(v -> openChannelHistory(channelInput.getText().toString()));
+        history.setVisibility(View.GONE);
 
         Button favorite = makeButton("☆ GUARDAR");
         LinearLayout.LayoutParams favoriteParams = new LinearLayout.LayoutParams(0, dp(52), 1f);
