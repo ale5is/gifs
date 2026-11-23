@@ -36,13 +36,11 @@ public class MainActivity extends Activity {
     private static final String RECENTS = "recents";
     private static final Pattern CHANNEL_PATTERN = Pattern.compile("[A-Za-z0-9_]{1,25}");
     private LinearLayout root;
-    private LinearLayout playerBar;
     private EditText channelInput;
     private WebView webView;
     private View customView;
     private WebChromeClient.CustomViewCallback customViewCallback;
     private FrameLayout fullScreenContainer;
-    private boolean expanded;
 
     @Override
     public void onCreate(Bundle state) {
@@ -119,7 +117,6 @@ public class MainActivity extends Activity {
     }
 
     private void showHome() {
-        expanded = false;
         applyImmersiveMode(false);
         if (webView != null) {
             webView.stopLoading();
@@ -253,28 +250,10 @@ public class MainActivity extends Activity {
             return;
         }
         addRecent(channel);
-        expanded = false;
 
         root = new LinearLayout(this);
         root.setOrientation(LinearLayout.VERTICAL);
         root.setBackgroundColor(Color.BLACK);
-
-        playerBar = new LinearLayout(this);
-        playerBar.setGravity(Gravity.CENTER_VERTICAL);
-        playerBar.setPadding(dp(8), 0, dp(8), 0);
-        playerBar.setBackgroundColor(Color.rgb(20, 22, 25));
-
-        TextView channelName = makeText("KICK  ·  " + channel, 16, true);
-        playerBar.addView(channelName, new LinearLayout.LayoutParams(0, dp(48), 1));
-
-        Button expand = makeButton("PANTALLA COMPLETA");
-        expand.setOnClickListener(v -> setExpanded(true));
-        playerBar.addView(expand, new LinearLayout.LayoutParams(dp(190), dp(44)));
-
-        Button back = makeButton("VOLVER");
-        back.setOnClickListener(v -> showHome());
-        playerBar.addView(back, new LinearLayout.LayoutParams(dp(110), dp(44)));
-        root.addView(playerBar);
 
         webView = new WebView(this);
         webView.setBackgroundColor(Color.BLACK);
@@ -324,17 +303,9 @@ public class MainActivity extends Activity {
 
         root.addView(webView, new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, 0, 1));
+        applyImmersiveMode(true);
         setContentView(root);
         webView.loadUrl(PLAYER_BASE + channel + "?autoplay=true&muted=false&allowfullscreen=true");
-        webView.requestFocus();
-    }
-
-    private void setExpanded(boolean value) {
-        if (webView == null || playerBar == null || customView != null || expanded == value) return;
-        expanded = value;
-        if (value) root.removeView(playerBar);
-        else root.addView(playerBar, 0);
-        applyImmersiveMode(value);
         webView.requestFocus();
     }
 
@@ -343,7 +314,7 @@ public class MainActivity extends Activity {
         fullScreenContainer.removeView(customView);
         customView = null;
         setContentView(root);
-        applyImmersiveMode(expanded);
+        applyImmersiveMode(true);
         if (customViewCallback != null) customViewCallback.onCustomViewHidden();
         customViewCallback = null;
         if (webView != null) webView.requestFocus();
@@ -355,10 +326,6 @@ public class MainActivity extends Activity {
             hideCustomView();
             return;
         }
-        if (expanded) {
-            setExpanded(false);
-            return;
-        }
         if (webView != null) {
             showHome();
             return;
@@ -368,7 +335,7 @@ public class MainActivity extends Activity {
 
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
-        if (keyCode == KeyEvent.KEYCODE_BACK && (expanded || customView != null)) {
+        if (keyCode == KeyEvent.KEYCODE_BACK && customView != null) {
             onBackPressed();
             return true;
         }
