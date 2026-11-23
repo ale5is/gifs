@@ -43,6 +43,7 @@ public class StreamPlayerActivity extends Activity {
     private TextView status;
     private LinearLayout topBar;
     private SeekBar volumeSlider;
+    private final java.util.Set<View> highlightedViews=new java.util.HashSet<>();
     private boolean controlsHiddenByCenter;
     private int navigationZone=0;
     private String channel, vodUuid, vodTitle, directMediaUrl;
@@ -145,8 +146,8 @@ public class StreamPlayerActivity extends Activity {
     }
     private int dp(float value){return (int)(value*getResources().getDisplayMetrics().density+0.5f);}
     private void addFocusHighlight(View view){
-        if(view==null || Boolean.TRUE.equals(view.getTag(0x7f0a0001)))return;
-        view.setTag(0x7f0a0001,Boolean.TRUE);
+        if(view==null || highlightedViews.contains(view))return;
+        highlightedViews.add(view);
         final android.graphics.drawable.Drawable original=view.getBackground();
         view.setOnFocusChangeListener((v,focused)->{
             if(focused){
