@@ -51,6 +51,34 @@ public final class KickVodResolver {
         void onError(String message);
     }
 
+    public interface LiveCallback {
+        void onResult(boolean live);
+    }
+
+    public static void checkLive(String channel, LiveCallback callback) {
+        new Thread(() -> {
+            boolean live = false;
+            try {
+                String endpoint = "https://kick.com/api/v2/channels/" + channel;
+                Request request = new Request.Builder().url(endpoint)
+                        .header("User-Agent", KickStreamResolver.USER_AGENT)
+                        .header("Accept", "application/json, text/plain, */*")
+                        .header("Referer", "https://kick.com/" + channel)
+                        .build();
+                try (Response response = CLIENT.newCall(request).execute()) {
+                    if (response.isSuccessful() && response.body() != null) {
+                        JSONObject root = new JSONObject(response.body().string());
+                        JSONObject livestream = root.optJSONObject("livestream");
+                        live = livestream != null && !livestream.isNull("id");
+                    }
+                }
+            } catch (Exception ignored) {
+            }
+            final boolean result = live;
+            MAIN.post(() -> callback.onResult(result));
+        }, "KickLiveStatus").start();
+    }
+
     private KickVodResolver() {}
 
     public static void load(String channel, ListCallback callback) {
