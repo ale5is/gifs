@@ -68,8 +68,8 @@ public class MainActivity extends Activity {
     private Button makeButton(String value) {
         Button button = new Button(this);
         button.setText(value);
-        button.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12);
-        button.setPadding(dp(3), 0, dp(3), 0);
+        button.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16);
+        button.setPadding(dp(10), 0, dp(10), 0);
         button.setMinWidth(0);
         button.setFocusable(true);
         button.setFocusableInTouchMode(true);
@@ -170,10 +170,10 @@ public class MainActivity extends Activity {
         channelInput.setSelectAllOnFocus(true);
         channelInput.setFocusable(true);
         channelInput.setFocusableInTouchMode(true);
-        searchRow.addView(channelInput, new LinearLayout.LayoutParams(0, dp(54), 2f));
+        searchRow.addView(channelInput, new LinearLayout.LayoutParams(0, dp(48), 1f));
 
         Button watch = makeButton("BUSCAR");
-        LinearLayout.LayoutParams watchParams = new LinearLayout.LayoutParams(0, dp(52), 1f);
+        LinearLayout.LayoutParams watchParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, dp(44));
         watchParams.leftMargin = dp(8);
         searchRow.addView(watch, watchParams);
         watch.setOnClickListener(v -> openChannelHistory(channelInput.getText().toString()));
@@ -183,13 +183,13 @@ public class MainActivity extends Activity {
         });
 
         Button history = makeButton(" ");
-        LinearLayout.LayoutParams historyParams = new LinearLayout.LayoutParams(0, dp(52), 1f);
+        LinearLayout.LayoutParams historyParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, dp(44));
         historyParams.leftMargin = dp(6);
         searchRow.addView(history, historyParams);
         history.setVisibility(View.GONE);
 
         Button favorite = makeButton("☆ GUARDAR");
-        LinearLayout.LayoutParams favoriteParams = new LinearLayout.LayoutParams(0, dp(52), 1f);
+        LinearLayout.LayoutParams favoriteParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, dp(44));
         favoriteParams.leftMargin = dp(6);
         searchRow.addView(favorite, favoriteParams);
         favorite.setOnClickListener(v -> toggleFavorite(channelInput.getText().toString()));
