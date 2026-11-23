@@ -26,6 +26,7 @@ public class ChannelHistoryActivity extends Activity {
     public static final String EXTRA_CHANNEL = "channel";
     private LinearLayout list;
     private String channel;
+    private boolean liveDisplayed;
 
     @Override protected void onCreate(Bundle state) {
         super.onCreate(state);
@@ -82,6 +83,7 @@ public class ChannelHistoryActivity extends Activity {
         KickVodResolver.checkLive(channel,live->{
             if(isFinishing())return;
             list.removeAllViews();
+            liveDisplayed=live;
             if(live)addLiveVideo();
             loadPreviousVideos();
         });
@@ -93,7 +95,8 @@ public class ChannelHistoryActivity extends Activity {
                 TextView heading=text("VIDEOS ANTERIORES · "+videos.size(),13,true);
                 list.addView(heading);
                 for(KickVodResolver.Vod vod:videos)addVideo(vod);
-                if(list.getChildCount()>1)list.getChildAt(1).requestFocus();
+                if(liveDisplayed && list.getChildCount()>0)list.getChildAt(0).requestFocus();
+                else if(list.getChildCount()>1)list.getChildAt(1).requestFocus();
                 else if(list.getChildCount()>0)list.getChildAt(0).requestFocus();
             }
             @Override public void onError(String message){
