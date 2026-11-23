@@ -268,64 +268,6 @@ public class MainActivity extends Activity {
         Intent intent = new Intent(this, StreamPlayerActivity.class);
         intent.putExtra(StreamPlayerActivity.EXTRA_CHANNEL, channel);
         startActivity(intent);
-        return;
-
-        root = new LinearLayout(this);
-        root.setOrientation(LinearLayout.VERTICAL);
-        root.setBackgroundColor(Color.BLACK);
-
-        webView = new WebView(this);
-        webView.setBackgroundColor(Color.BLACK);
-        webView.setFocusable(true);
-        webView.setFocusableInTouchMode(true);
-        WebSettings settings = webView.getSettings();
-        settings.setJavaScriptEnabled(true);
-        settings.setDomStorageEnabled(true);
-        settings.setDatabaseEnabled(false);
-        settings.setMediaPlaybackRequiresUserGesture(false);
-        settings.setLoadWithOverviewMode(true);
-        settings.setUseWideViewPort(true);
-        settings.setSupportZoom(false);
-        settings.setBuiltInZoomControls(false);
-        settings.setDisplayZoomControls(false);
-        settings.setJavaScriptCanOpenWindowsAutomatically(false);
-        settings.setAllowFileAccess(false);
-        settings.setAllowContentAccess(false);
-        webView.setWebViewClient(new WebViewClient() {
-            @Override
-            public void onReceivedSslError(WebView view, SslErrorHandler handler, SslError error) {
-                handler.cancel();
-            }
-        });
-        webView.setWebChromeClient(new WebChromeClient() {
-            @Override
-            public void onShowCustomView(View view, CustomViewCallback callback) {
-                if (customView != null) {
-                    callback.onCustomViewHidden();
-                    return;
-                }
-                customView = view;
-                customViewCallback = callback;
-                fullScreenContainer = new FrameLayout(MainActivity.this);
-                fullScreenContainer.setBackgroundColor(Color.BLACK);
-                fullScreenContainer.addView(view, new FrameLayout.LayoutParams(
-                        ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
-                applyImmersiveMode(true);
-                setContentView(fullScreenContainer);
-            }
-
-            @Override
-            public void onHideCustomView() {
-                hideCustomView();
-            }
-        });
-
-        root.addView(webView, new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT, 0, 1));
-        applyImmersiveMode(true);
-        setContentView(root);
-        webView.loadUrl(PLAYER_BASE + channel + "?autoplay=true&muted=false&allowfullscreen=true");
-        webView.requestFocus();
     }
 
     private void hideCustomView() {
