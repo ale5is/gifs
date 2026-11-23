@@ -26,12 +26,16 @@ import com.google.android.exoplayer2.upstream.DefaultHttpDataSource;
 
 public class StreamPlayerActivity extends Activity {
     public static final String EXTRA_CHANNEL = "channel";
+    public static final String EXTRA_VOD_UUID = "vod_uuid";
+    public static final String EXTRA_VOD_TITLE = "vod_title";
     private ExoPlayer player;
     private DefaultTrackSelector trackSelector;
     private PlayerView playerView;
     private TextView status;
     private LinearLayout topBar;
     private String channel;
+    private String vodUuid;
+    private String vodTitle;
 
     @Override
     protected void onCreate(Bundle state) {
@@ -40,6 +44,8 @@ public class StreamPlayerActivity extends Activity {
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
         channel = getIntent().getStringExtra(EXTRA_CHANNEL);
+        vodUuid = getIntent().getStringExtra(EXTRA_VOD_UUID);
+        vodTitle = getIntent().getStringExtra(EXTRA_VOD_TITLE);
         if (channel == null || channel.trim().length() == 0) {
             finish();
             return;
@@ -74,7 +80,7 @@ public class StreamPlayerActivity extends Activity {
         topBar.addView(back);
 
         TextView name = new TextView(this);
-        name.setText("  " + channel);
+        name.setText("  " + (vodTitle != null ? vodTitle : channel));
         name.setTextColor(Color.WHITE);
         name.setTextSize(16);
         topBar.addView(name, new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1));
@@ -137,33 +143,52 @@ public class StreamPlayerActivity extends Activity {
     }
 
     private void resolveAndPlay() {
+        if (vodUuid != null && vodUuid.length() > 0) {
+            status.setText("Preparando video anterior...");
+            KickVodResolver.resolvePlayback(vodUuid, new KickVodResolver.PlaybackCallback() {
+                @Override
+                public void onSuccess(String url) {
+                    runOnUiThread(() -> playResolvedUrl(url));
+                }
+
+                @Override
+                public void onError(String message) {
+                    runOnUiThread(() -> showPlaybackError(message));
+                }
+            });
+            return;
+        }
         KickStreamResolver.resolve(channel, new KickStreamResolver.Callback() {
             @Override
             public void onSuccess(String url) {
-                runOnUiThread(() -> {
-                    if (isFinishing() || player == null) return;
-                    MediaItem item = new MediaItem.Builder()
-                            .setUri(url)
-                            .setMimeType(com.google.android.exoplayer2.util.MimeTypes.APPLICATION_M3U8)
-                            .build();
-                    player.setMediaItem(item);
-                    player.prepare();
-                    player.setPlayWhenReady(true);
-                    status.setText("Iniciando directo...");
-                    status.setVisibility(View.VISIBLE);
-                });
+                runOnUiThread(() -> playResolvedUrl(url));
             }
 
             @Override
             public void onError(String message) {
-                runOnUiThread(() -> {
-                    if (isFinishing()) return;
-                    status.setText(message);
-                    status.setVisibility(View.VISIBLE);
-                    Toast.makeText(StreamPlayerActivity.this, message, Toast.LENGTH_LONG).show();
-                });
+                runOnUiThread(() -> showPlaybackError(message));
             }
         });
+    }
+
+    private void playResolvedUrl(String url) {
+        if (isFinishing() || player == null) return;
+        MediaItem item = new MediaItem.Builder()
+                .setUri(url)
+                .setMimeType(com.google.android.exoplayer2.util.MimeTypes.APPLICATION_M3U8)
+                .build();
+        player.setMediaItem(item);
+        player.prepare();
+        player.setPlayWhenReady(true);
+        status.setText(vodUuid != null ? "Iniciando video..." : "Iniciando directo...");
+        status.setVisibility(View.VISIBLE);
+    }
+
+    private void showPlaybackError(String message) {
+        if (isFinishing()) return;
+        status.setText(message);
+        status.setVisibility(View.VISIBLE);
+        Toast.makeText(StreamPlayerActivity.this, message, Toast.LENGTH_LONG).show();
     }
 
     private void showQualityMenu(View anchor) {
