@@ -52,7 +52,12 @@ public final class KickClipsResolver {
                         if(item==null) continue;
                         String id=first(item,"id","slug");
                         String title=first(item,"title","clip_title");
-                        String thumbnail=first(item,"thumbnail_url","thumbnail","thumbnail_src");
+                        String thumbnail=first(item,"thumbnail_url","thumbnail_src","thumbnailUrl");
+                        if(thumbnail.length()==0) {
+                            Object thumb=item.opt("thumbnail");
+                            if(thumb instanceof JSONObject) thumbnail=first((JSONObject)thumb,"src","url");
+                            else if(thumb instanceof String) thumbnail=String.valueOf(thumb).trim();
+                        }
                         String playback=first(item,"video_url","playback_url","source");
                         String date=first(item,"created_at","createdAt");
                         String duration=first(item,"duration","duration_seconds","durationSeconds");
