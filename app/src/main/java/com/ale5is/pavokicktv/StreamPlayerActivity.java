@@ -50,6 +50,7 @@ public class StreamPlayerActivity extends Activity {
     private boolean controlsHiddenByCenter;
     private int navigationZone=0;
     private View lastTopFocus;
+    private int lastTopFocusIndex=0;
     private View lastPlaybackControl;
     private int lastPlaybackControlId=View.NO_ID;
     private boolean changingFocus;
@@ -160,6 +161,7 @@ public class StreamPlayerActivity extends Activity {
                     if(v.getParent()==topBar || isDescendantOf(v,topBar)){
                         navigationZone=0;
                         lastTopFocus=v;
+                        lastTopFocusIndex=topBar.indexOfChild(v);
                     }else if(v.getId()==com.google.android.exoplayer2.ui.R.id.exo_progress){
                         navigationZone=3;
                     }else if(isDescendantOf(v,playerView)){
@@ -203,6 +205,7 @@ public class StreamPlayerActivity extends Activity {
         if(focused!=null){
             if(focused==topBar || isDescendantOf(focused,topBar)){
                 lastTopFocus=focused;
+                lastTopFocusIndex=topBar.indexOfChild(focused);
             }else if(focused.getId()==com.google.android.exoplayer2.ui.R.id.exo_progress){
                 navigationZone=3;
             }else if(isDescendantOf(focused,playerView)){
@@ -224,14 +227,30 @@ public class StreamPlayerActivity extends Activity {
         if(topBar!=null)topBar.setVisibility(View.VISIBLE);
         if(playerView!=null)playerView.hideController();
         if(topBar!=null)topBar.post(()->{
-            View target=lastTopFocus;
-            if(target==null || !target.isFocusable() || target.getVisibility()!=View.VISIBLE)
-                target=topBar.getChildCount()>0?topBar.getChildAt(0):null;
-            if(target!=null){
+            View target=lastTopFocusIndex>=0 && lastTopFocusIndex<topBar.getChildCount()
+                    ?topBar.getChildAt(lastTopFocusIndex):null;
+            if(target==null || !target.isFocusable() || target.getVisibility()!=View.VISIBLE){
+                target=topBar.getChildAt(0);
+            }
+            if(target!=null && target.isFocusable()){
                 changingFocus=true;
-                target.requestFocus();
+                boolean focused=target.requestFocus();
                 changingFocus=false;
-                lastTopFocus=target;
+                if(!focused){
+                    for(int i=0;i<topBar.getChildCount();i++){
+                        View candidate=topBar.getChildAt(i);
+                        if(candidate.isFocusable() && candidate.getVisibility()==View.VISIBLE
+                                && candidate.requestFocus()){
+                            target=candidate;
+                            focused=true;
+                            break;
+                        }
+                    }
+                }
+                if(focused){
+                    lastTopFocus=target;
+                    lastTopFocusIndex=topBar.indexOfChild(target);
+                }
             }
         });
     }
