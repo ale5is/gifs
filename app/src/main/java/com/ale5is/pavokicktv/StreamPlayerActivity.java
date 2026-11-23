@@ -359,7 +359,8 @@ public class StreamPlayerActivity extends Activity {
                 if(navigationZone==1){showTopZone();return true;}
             }
             if(key==KeyEvent.KEYCODE_DPAD_DOWN){
-                if(navigationZone==0){showBottomZone();return true;}
+                if(navigationZone==0){hideHud();return true;}
+                if(navigationZone==1){showBottomZone();return true;}
                 if(navigationZone==2){
                     View progress=playerView==null?null:playerView.findViewById(com.google.android.exoplayer2.ui.R.id.exo_progress);
                     if(progress!=null && progress.isFocusable() && progress.getVisibility()==View.VISIBLE){
@@ -367,7 +368,6 @@ public class StreamPlayerActivity extends Activity {
                         return true;
                     }
                 }
-                if(navigationZone==1){showBottomZone();return true;}
             }
             if(navigationZone==1 && (key==KeyEvent.KEYCODE_DPAD_CENTER || key==KeyEvent.KEYCODE_ENTER))
                 return true;
