@@ -2,12 +2,13 @@
 
 Aplicación Android nativa para ver directos de KICK en televisores Android antiguos.
 
-## Versión 0.2.0
+## Versión 0.3.0
 
 - Interfaz nativa horizontal pensada para televisor y control remoto.
 - Entrada directa de nombre de canal.
 - Favoritos persistentes (hasta 12 canales).
 - Historial local de los últimos 8 canales abiertos.
+- Mantener pulsado un canal con el control remoto para quitarlo de favoritos o del historial.
 - Abre únicamente el reproductor oficial `player.kick.com`, no la página completa del canal.
 - Botón de pantalla completa y modo inmersivo.
 - Cierra y libera el WebView al volver a la pantalla principal.
