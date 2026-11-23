@@ -37,11 +37,31 @@ public class ChannelClipsActivity extends Activity {
         if(bold)t.setTypeface(android.graphics.Typeface.DEFAULT,android.graphics.Typeface.BOLD);
         return t;
     }
+    private void addButtonFocus(Button button) {
+        button.setFocusable(true);
+        button.setFocusableInTouchMode(true);
+        final android.graphics.drawable.Drawable normalBackground = button.getBackground();
+        button.setOnFocusChangeListener((view, focused) -> {
+            if (focused) {
+                android.graphics.drawable.GradientDrawable selected = new android.graphics.drawable.GradientDrawable();
+                selected.setColor(0xFF263D50);
+                selected.setCornerRadius(dp(6));
+                selected.setStroke(dp(3), 0xFF42B8F4);
+                view.setBackground(selected);
+                view.setScaleX(1.04f);
+                view.setScaleY(1.04f);
+            } else {
+                view.setBackground(normalBackground);
+                view.setScaleX(1f);
+                view.setScaleY(1f);
+            }
+        });
+    }
     private void buildUi(){
         LinearLayout root=new LinearLayout(this);root.setOrientation(LinearLayout.VERTICAL);
         root.setPadding(dp(30),dp(16),dp(30),dp(16));root.setBackgroundColor(Color.rgb(15,17,20));
         LinearLayout header=new LinearLayout(this);header.setGravity(Gravity.CENTER_VERTICAL);
-        Button back=new Button(this);back.setText("VOLVER");back.setOnClickListener(v->finish());header.addView(back);
+        Button back=new Button(this);back.setText("VOLVER");back.setOnClickListener(v->finish());addButtonFocus(back);header.addView(back);
         header.addView(text("  CLIPS · "+channel,22,true),new LinearLayout.LayoutParams(0,-2,1));root.addView(header);
         ScrollView scroll=new ScrollView(this);list=new LinearLayout(this);list.setOrientation(LinearLayout.VERTICAL);scroll.addView(list);
         root.addView(scroll,new LinearLayout.LayoutParams(-1,0,1));setContentView(root);
@@ -56,7 +76,7 @@ public class ChannelClipsActivity extends Activity {
             }
             @Override public void onError(String message){
                 if(isFinishing())return;list.removeAllViews();list.addView(text(message,17,false));
-                Button retry=new Button(ChannelClipsActivity.this);retry.setText("REINTENTAR");retry.setOnClickListener(v->load());list.addView(retry);
+                Button retry=new Button(ChannelClipsActivity.this);retry.setText("REINTENTAR");addButtonFocus(retry);retry.setOnClickListener(v->load());list.addView(retry);
             }
         });
     }
