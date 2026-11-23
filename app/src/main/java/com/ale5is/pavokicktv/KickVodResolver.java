@@ -170,47 +170,27 @@ public final class KickVodResolver {
     }
 
     private static String thumbnail(JSONObject item, JSONObject livestream) {
-        String value = first(item, "thumbnail_url", "thumbnail");
-        if (value.length() == 0) value = first(livestream, "thumbnail_url");
-        Object thumb = livestream.opt("thumbnail");
-        if (value.length() == 0 && thumb instanceof JSONObject) {
-            JSONObject object = (JSONObject) thumb;
-            value = first(object, "src", "url");
+        String value = first(item, "thumbnail_url", "thumbnail_src", "thumbnailUrl");
+        if (value.length() == 0) value = thumbnailValue(item.opt("thumbnail"));
+        if (value.length() == 0) value = first(livestream, "thumbnail_url", "thumbnail_src", "thumbnailUrl");
+        if (value.length() == 0) value = thumbnailValue(livestream.opt("thumbnail"));
+        JSONObject video = item.optJSONObject("video");
+        if (value.length() == 0 && video != null) {
+            value = first(video, "thumbnail_url", "thumbnail_src", "thumbnailUrl");
+            if (value.length() == 0) value = thumbnailValue(video.opt("thumbnail"));
         }
-        if (value.length() == 0 && thumb instanceof String) value = String.valueOf(thumb);
         return value;
     }
 
-    private static boolean isVideoId(String value) {
-        return value != null && (value.matches("(?i)[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}")
-                || value.matches("(?i)[0-9a-f]{26}"));
-    }
-
-    private static String first(JSONObject object, String... keys) {
-        if (object == null) return "";
-        for (String key : keys) {
-            Object value = object.opt(key);
-            if (value != null && value != JSONObject.NULL) {
-                String text = String.valueOf(value).trim();
-                if (text.length() > 0 && !"0".equals(text)) return text;
-            }
+    private static String thumbnailValue(Object value) {
+        if (value instanceof JSONObject) {
+            JSONObject object = (JSONObject) value;
+            return first(object, "src", "url", "source", "url_template");
+        }
+        if (value instanceof String) {
+            String text = ((String) value).trim();
+            if (text.startsWith("http://") || text.startsWith("https://")) return text;
         }
         return "";
     }
 
-    private static String formatDuration(String raw, JSONObject item, JSONObject livestream) {
-        try {
-            long value = Long.parseLong(raw);
-            if (item.has("duration_ms") || (livestream != null && livestream.has("duration")) || value > 100000) {
-                value /= 1000;
-            }
-            long hours = value / 3600;
-            long minutes = (value % 3600) / 60;
-            long seconds = value % 60;
-            return hours > 0 ? String.format("%d:%02d:%02d", hours, minutes, seconds)
-                    : String.format("%d:%02d", minutes, seconds);
-        } catch (Exception ignored) {
-            return raw.length() == 0 ? "Duración desconocida" : raw;
-        }
-    }
-}
