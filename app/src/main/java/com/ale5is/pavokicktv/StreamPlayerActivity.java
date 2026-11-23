@@ -15,6 +15,7 @@ import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.PopupMenu;
+import android.widget.PopupWindow;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -43,6 +44,8 @@ public class StreamPlayerActivity extends Activity {
     private TextView status;
     private LinearLayout topBar;
     private SeekBar volumeSlider;
+    private PopupWindow volumePopup;
+    private View volumeButton;
     private final java.util.Set<View> highlightedViews=new java.util.HashSet<>();
     private boolean controlsHiddenByCenter;
     private int navigationZone=0;
@@ -79,22 +82,12 @@ public class StreamPlayerActivity extends Activity {
         topBar.addView(name,new LinearLayout.LayoutParams(0,-2,1));
         Button quality=button("⚙");quality.setContentDescription("Calidad de video");quality.setTextSize(22);quality.setOnClickListener(this::showQualityMenu);topBar.addView(quality);
         Button speed=button("◷");speed.setContentDescription("Velocidad de reproducción");speed.setTextSize(22);speed.setOnClickListener(this::showSpeedMenu);topBar.addView(speed);
-        TextView volumeIcon=new TextView(this);volumeIcon.setText("🔊");volumeIcon.setTextColor(Color.WHITE);volumeIcon.setTextSize(18);volumeIcon.setGravity(Gravity.CENTER);topBar.addView(volumeIcon);
-        volumeSlider=new SeekBar(this);volumeSlider.setMax(100);
-        AudioManager audio=(AudioManager)getSystemService(Context.AUDIO_SERVICE);
-        if(audio!=null){int max=audio.getStreamMaxVolume(AudioManager.STREAM_MUSIC);int current=audio.getStreamVolume(AudioManager.STREAM_MUSIC);volumeSlider.setProgress(max==0?0:(current*100/max));}
-        volumeSlider.setFocusable(true);volumeSlider.setContentDescription("Volumen");
-        volumeSlider.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener(){
-            @Override public void onProgressChanged(SeekBar seekBar,int progress,boolean fromUser){
-                if(fromUser){AudioManager manager=(AudioManager)getSystemService(Context.AUDIO_SERVICE);if(manager!=null){
-                    int max=manager.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
-                    manager.setStreamVolume(AudioManager.STREAM_MUSIC,Math.round(max*progress/100f),0);
-                }}
-            }
-            @Override public void onStartTrackingTouch(SeekBar seekBar){}
-            @Override public void onStopTrackingTouch(SeekBar seekBar){}
-        });
-        topBar.addView(volumeSlider,new LinearLayout.LayoutParams(dp(105),dp(42)));
+        Button speaker=button("🔊");
+        speaker.setTextSize(20);
+        speaker.setContentDescription("Volumen");
+        volumeButton=speaker;
+        speaker.setOnClickListener(v->toggleVolumeSlider(speaker));
+        topBar.addView(speaker);
         FrameLayout.LayoutParams topParams=new FrameLayout.LayoutParams(-1,-2,Gravity.TOP);frame.addView(topBar,topParams);
 
         status=new TextView(this);status.setText("Conectando con KICK...");
@@ -252,6 +245,53 @@ public class StreamPlayerActivity extends Activity {
                 Toast.makeText(this,"Velocidad: "+item.getTitle(),Toast.LENGTH_SHORT).show();}
             return true;
         });menu.show();
+    }
+    private void toggleVolumeSlider(View anchor){
+        if(volumePopup!=null && volumePopup.isShowing()){
+            volumePopup.dismiss();
+            return;
+        }
+        LinearLayout panel=new LinearLayout(this);
+        panel.setOrientation(LinearLayout.HORIZONTAL);
+        panel.setGravity(Gravity.CENTER_VERTICAL);
+        panel.setPadding(dp(12),dp(8),dp(12),dp(8));
+        panel.setBackgroundColor(0xEE202020);
+        TextView icon=new TextView(this);
+        icon.setText("🔊");icon.setTextColor(Color.WHITE);icon.setTextSize(18);
+        panel.addView(icon);
+        volumeSlider=new SeekBar(this);
+        volumeSlider.setMax(100);
+        AudioManager audio=(AudioManager)getSystemService(Context.AUDIO_SERVICE);
+        if(audio!=null){
+            int max=audio.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
+            int current=audio.getStreamVolume(AudioManager.STREAM_MUSIC);
+            volumeSlider.setProgress(max==0?0:current*100/max);
+        }
+        volumeSlider.setFocusable(true);
+        volumeSlider.setContentDescription("Nivel de volumen");
+        volumeSlider.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener(){
+            @Override public void onProgressChanged(SeekBar seekBar,int progress,boolean fromUser){
+                if(fromUser){
+                    AudioManager manager=(AudioManager)getSystemService(Context.AUDIO_SERVICE);
+                    if(manager!=null){
+                        int max=manager.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
+                        manager.setStreamVolume(AudioManager.STREAM_MUSIC,Math.round(max*progress/100f),0);
+                    }
+                }
+            }
+            @Override public void onStartTrackingTouch(SeekBar seekBar){}
+            @Override public void onStopTrackingTouch(SeekBar seekBar){}
+        });
+        panel.addView(volumeSlider,new LinearLayout.LayoutParams(dp(190),dp(48)));
+        volumePopup=new PopupWindow(panel,dp(245),dp(64),true);
+        volumePopup.setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(0xEE202020));
+        volumePopup.setOutsideTouchable(true);
+        volumePopup.setOnDismissListener(()->{
+            volumePopup=null;
+            if(volumeButton!=null && navigationZone==0)volumeButton.requestFocus();
+        });
+        volumePopup.showAsDropDown(anchor,0,dp(4));
+        volumeSlider.requestFocus();
     }
     private void changeVolume(boolean up){
         AudioManager audio=(AudioManager)getSystemService(Context.AUDIO_SERVICE);
