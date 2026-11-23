@@ -52,7 +52,7 @@ public class ChannelClipsActivity extends Activity {
             @Override public void onSuccess(List<KickClipsResolver.Clip> clips){
                 if(isFinishing())return;list.removeAllViews();list.addView(text(clips.size()+" clips encontrados",13,false));
                 for(KickClipsResolver.Clip clip:clips)addClip(clip);
-                if(list.getChildCount()>1)list.getChildAt(1).requestFocus();
+                if(list.getChildCount()>1){View firstClip=list.getChildAt(1);firstClip.setFocusableInTouchMode(true);firstClip.post(()->firstClip.requestFocus());}
             }
             @Override public void onError(String message){
                 if(isFinishing())return;list.removeAllViews();list.addView(text(message,17,false));
@@ -73,7 +73,7 @@ public class ChannelClipsActivity extends Activity {
         info.addView(text(clip.date+"  ·  "+clip.duration+"  ·  "+clip.views+" vistas",12,false));
         row.addView(info,new LinearLayout.LayoutParams(0,-2,1));
         row.setFocusable(true);row.setClickable(true);
-        row.setFocusableInTouchMode(false);
+        row.setFocusableInTouchMode(true);
         final android.graphics.drawable.Drawable normalBackground=row.getBackground();
         row.setOnFocusChangeListener((view,focused)->{
             if(focused){
