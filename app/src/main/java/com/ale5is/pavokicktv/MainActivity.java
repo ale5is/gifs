@@ -170,11 +170,11 @@ public class MainActivity extends Activity {
         channelInput.setSelectAllOnFocus(true);
         channelInput.setFocusable(true);
         channelInput.setFocusableInTouchMode(true);
-        searchRow.addView(channelInput, new LinearLayout.LayoutParams(0, dp(48), 1f));
+        searchRow.addView(channelInput, new LinearLayout.LayoutParams(0, dp(48), 0.55f));
 
         Button watch = makeButton("BUSCAR");
         LinearLayout.LayoutParams watchParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, dp(44));
-        watchParams.leftMargin = dp(8);
+        watchParams.leftMargin = dp(14);
         searchRow.addView(watch, watchParams);
         watch.setOnClickListener(v -> openChannelHistory(channelInput.getText().toString()));
         channelInput.setOnEditorActionListener((view, actionId, event) -> {
@@ -184,15 +184,18 @@ public class MainActivity extends Activity {
 
         Button history = makeButton(" ");
         LinearLayout.LayoutParams historyParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, dp(44));
-        historyParams.leftMargin = dp(6);
+        historyParams.leftMargin = dp(12);
         searchRow.addView(history, historyParams);
         history.setVisibility(View.GONE);
 
         Button favorite = makeButton("☆ GUARDAR");
         LinearLayout.LayoutParams favoriteParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, dp(44));
-        favoriteParams.leftMargin = dp(6);
+        favoriteParams.leftMargin = dp(12);
         searchRow.addView(favorite, favoriteParams);
         favorite.setOnClickListener(v -> toggleFavorite(channelInput.getText().toString()));
+
+        View searchRowSpacer = new View(this);
+        searchRow.addView(searchRowSpacer, new LinearLayout.LayoutParams(0, 1, 0.45f));
         LinearLayout.LayoutParams searchParams = new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
         searchParams.topMargin = dp(22);
