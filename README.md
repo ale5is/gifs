@@ -23,3 +23,6 @@ Aplicación Android nativa para ver directos de KICK en televisores Android anti
 ## Compilación
 
 GitHub Actions compila el APK debug y lo publica como artefacto descargable.
+
+
+Current version: 0.4.1. The player controls now hide together and can be restored with the TV remote.
